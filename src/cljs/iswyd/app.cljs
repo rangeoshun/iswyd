@@ -1,4 +1,4 @@
-(ns iswyd.mock-app
+(ns iswyd.app
   (:require [reagent.core :as reagent :refer [atom]]
             [secretary.core :as secretary :include-macros true]
             [accountant.core :as accountant]))

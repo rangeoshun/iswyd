@@ -62,7 +62,7 @@
               :pretty-print  true}}
             :app
             {:source-paths ["src/cljs" "src/cljc" "env/dev/cljs"]
-             :figwheel {:on-jsload "iswyd.mock-app/mount-root"}
+             :figwheel {:on-jsload "iswyd.app/mount-root"}
              :compiler
              {:main "iswyd.dev"
               :asset-path "/js/app-out"
