@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "@cljs-oss/module-deps": "^1.1.1",
-    "git-diff": "^2.0.6"
+    "@cljs-oss/module-deps": "^1.1.1"
   }
 }

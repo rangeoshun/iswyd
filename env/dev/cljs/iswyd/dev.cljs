@@ -1,6 +1,6 @@
 (ns ^:figwheel-no-load iswyd.dev
   (:require
-    [iswyd.core :as lib]
+    [iswyd-lib.core :as lib]
     [iswyd.app :as app]
     [devtools.core :as devtools]))
 
@@ -8,5 +8,4 @@
 
 (enable-console-print!)
 
-(lib/main)
 (app/init!)

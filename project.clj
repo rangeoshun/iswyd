@@ -18,7 +18,8 @@
                  [secretary "1.2.3"]
                  [venantius/accountant "0.2.4"
                   :exclusions [org.clojure/tools.reader]]
-                 [cljsjs/google-diff-match-patch "20121119-2"]]
+                 [cljsjs/google-diff-match-patch "20121119-2"]
+                 [cljsjs/html-screen-capture-js "1.0.10-1"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-asset-minifier "0.2.7"
@@ -44,24 +45,22 @@
 
   :cljsbuild
   {:builds {:min
-            {:source-paths ["src/cljs" "src/cljc" "env/prod/cljs"]
+            {:source-paths ["src/cljs/iswyd_lib"]
              :compiler
-             {:output-to        "target/cljsbuild/public/js/app.js"
+             {:externs ["iswyd-lib.ext.js"]
+              :output-to "target/cljsbuild/public/js/iswyd-lib.min.js"
               :optimizations :advanced
               :pretty-print  false}}
             :lib
-            {:source-paths ["src/cljs" "src/cljc" "env/dev/cljs"]
-             :figwheel {:on-jsload "iswyd.core/main"}
+            {:source-paths ["src/cljs/iswyd_lib"]
              :compiler
-             {:main "iswyd.dev"
-              :asset-path "/js/lib-out"
-              :output-to "target/cljsbuild/public/js/iswyd.js"
+             {:output-to "target/cljsbuild/public/js/iswyd-lib.js"
               :output-dir "target/cljsbuild/public/js/lib-out"
               :source-map true
               :optimizations :none
               :pretty-print  true}}
             :app
-            {:source-paths ["src/cljs" "src/cljc" "env/dev/cljs"]
+            {:source-paths ["src/cljs/iswyd_lib" "src/cljs/iswyd" "src/cljc/iswyd" "env/dev/cljs/iswyd"]
              :figwheel {:on-jsload "iswyd.app/mount-root"}
              :compiler
              {:main "iswyd.dev"

@@ -21,8 +21,8 @@
     (head)
     [:body {:class "body-container"}
      mount-target
-     (include-js "/js/iswyd.js")
-     (include-js "/js/app.js")]))
+     (include-js "/js/app.js")
+     (include-js "/js/iswyd-lib.js")]))
 
 (defroutes routes
   (GET "/" [] (loading-page))
