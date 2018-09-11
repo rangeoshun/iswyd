@@ -20,7 +20,9 @@
 (defonce page (atom #'home-page))
 
 (defn current-page []
-  [:div [@page]])
+  [:div
+   [:input {:placeholder "Some text here"}]
+   [@page]])
 
 (secretary/defroute "/" []
   (reset! page #'home-page))
