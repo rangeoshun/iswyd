@@ -18,8 +18,7 @@
                  [secretary "1.2.3"]
                  [venantius/accountant "0.2.4"
                   :exclusions [org.clojure/tools.reader]]
-                 [cljsjs/google-diff-match-patch "20121119-2"]
-                 [cljsjs/html-screen-capture-js "1.0.10-1"]]
+                 [cljsjs/google-diff-match-patch "20121119-2"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-asset-minifier "0.2.7"

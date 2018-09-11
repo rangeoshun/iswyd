@@ -23,23 +23,6 @@
 
 (defn doc-root [] (aget js/document.children 0))
 
-;; (defn child-list? [mut]
-;;   (= (.-type mut) "childList"))
-
-;; (defn has-link? [mut]
-;;   (let [nodes (array-seq (.-addedNodes mut))]
-;;     (reduce (fn [acc node]
-;;               (if acc
-;;                 acc
-;;                 (= (.-localName node) "link")))
-;;             false
-;;             nodes)))
-
-;; (defn capture []
-;;   (hsc.capture hsc-type.STRING js/window.document #js {:imageFormatForDataUrl "image/jpeg"
-;;                                                        :tagsOfIgnoredDocHeadElements #js ["script", "link", "style", "iframe"]
-;;                                                        :rulesToAddToDocStyle #js [""]}))
-
 (defn clone-root []
   (. (doc-root) cloneNode true))
 
