@@ -49,6 +49,7 @@
 (defn scripts [root] (get-tags root "script"))
 (defn links [root] (get-tags root "link"))
 (defn imgs [root] (get-tags root "img"))
+(defn inputs [root] (get-tags root "input"))
 
 (defn del-nodes [nodes]
   (loop [nodes nodes]
@@ -74,10 +75,19 @@
       (if-not (empty? others)
         (recur others)))))
 
+(defn cp-values [nodes]
+  (loop [nodes nodes]
+    (let [node (first nodes)
+          others (rest nodes)]
+      (if node (. node setAttribute "value" (.-value node)))
+      (if-not (empty? others)
+        (recur others)))))
+
 (defn sanitize [root]
   (del-nodes (scripts root))
   (abs-src (imgs root))
   (abs-href (links root))
+  (cp-values (inputs root))
   root)
 
 (defn capture []
