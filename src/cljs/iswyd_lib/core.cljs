@@ -14,8 +14,8 @@
 (def changelog (atom []))
 
 (defn add-to-changelog [patch, timestamp]
-  (swap! changelog (fn [] (conj @changelog {:patch patch
-                                            :timestamp timestamp}))))
+  (swap! changelog (fn [] (conj @changelog {:p patch
+                                            :t timestamp}))))
 
 (def obs-conf #js {:attributes true
                    :childList true
@@ -53,23 +53,26 @@
 (defn del-nodes [nodes]
   (loop [nodes nodes]
     (let [node (first nodes)]
-      (if node (dom/removeNode node))
+      (if node
+        (dom/removeNode node))
       (if-not (empty? nodes)
         (recur nodes)))))
 
 (defn abs-src [nodes]
   (loop [nodes nodes]
-    (let [node (first nodes)]
+    (let [node (first nodes)
+          others (rest nodes)]
       (if node (aset node "src" (.-src node)))
-      (if-not (empty? nodes)
-        (recur (rest nodes))))))
+      (if-not (empty? others)
+        (recur others)))))
 
 (defn abs-href [nodes]
   (loop [nodes nodes]
-    (let [node (first nodes)]
+    (let [node (first nodes)
+          others (rest nodes)]
       (if node (aset node "href" (.-href node)))
-      (if-not (empty? nodes)
-        (recur (rest nodes))))))
+      (if-not (empty? others)
+        (recur others)))))
 
 (defn sanitize [root]
   (del-nodes (scripts root))
@@ -82,14 +85,13 @@
 
 (defn change-handlr []
   (let [next-html (capture)
-        diff (. dmp patch-make @prev-html next-html)
-        patch (. dmp patch-toText diff)]
-    (if (> (count patch) 0)
+        patch (. dmp patch_make @prev-html next-html)]
+    (if-not (empty? patch)
       (add-to-changelog patch (. js/Date now)))
     (js/console.log (clj->js @changelog))
     (reset! prev-html next-html)))
 
-(def obs (js/MutationObserver. change-handlr))
+(def obs (js/MutationObserver. (fn [] (js/setTimeout change-handlr))))
 
 (defn init-changelog []
   (change-handlr)
@@ -99,6 +101,7 @@
   (init-changelog))
 
 (def iswyd-ext #js {:init (fn [] (init-changelog))
-                    :capture (fn [] (capture))})
+                    :capture (fn [] (capture))
+                    :changelog (fn [] (clj->js @changelog))})
 
 (aset js/window "iSwyd" iswyd-ext)
