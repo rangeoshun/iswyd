@@ -1,14 +1,14 @@
 (ns iswyd-lib.core
   (:require [goog.dom :as dom]
-            [cljsjs.google-diff-match-patch]))
+            [cljsjs.google-diff-match-patch]
+            [cljsjs.lz-string]))
 
 ;; -------------------------
 ;; Changelog
-;; TODO: Throttle recording
+;; TODO: Throttle recording?
 
 (def dmp (js/diff_match_patch.))
-;; (def hsc js/htmlScreenCaptureJs)
-;; (def hsc-type hsc.OutputType)
+(def lz js/LZString)
 
 (def prev-html (atom ""))
 (def changelog (atom []))
@@ -100,11 +100,14 @@
     (listen-change (inputs root))
     (. obs observe root obs-conf)))
 
+(defn compressed-log [] (lz.compressToBase64 (js/JSON.stringify (clj->js @changelog))))
+
 (defn main []
   (init-changelog))
 
 (def iswyd-ext #js {:init (fn [] (init-changelog))
                     :capture (fn [] (capture))
-                    :changelog (fn [] (clj->js @changelog))})
+                    :changelog (fn [] (clj->js @changelog))
+                    :compressed (fn [] (compressed-log))})
 
 (aset js/window "iSwyd" iswyd-ext)

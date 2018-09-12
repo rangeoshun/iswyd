@@ -18,7 +18,8 @@
                  [secretary "1.2.3"]
                  [venantius/accountant "0.2.4"
                   :exclusions [org.clojure/tools.reader]]
-                 [cljsjs/google-diff-match-patch "20121119-2"]]
+                 [cljsjs/google-diff-match-patch "20121119-2"]
+                 [cljsjs/lz-string "1.4.4-1"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-asset-minifier "0.2.7"
