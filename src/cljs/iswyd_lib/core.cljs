@@ -76,7 +76,7 @@
 (defn capture []
   (.-outerHTML (sanitize (clone-root))))
 
-(defn change-handlr []
+(defn change-handler []
   (let [next-html (capture)
         patch (. dmp patch_make @prev-html next-html)]
     (if-not (empty? patch)
@@ -84,11 +84,21 @@
     (js/console.log (clj->js @changelog))
     (reset! prev-html next-html)))
 
-(def obs (js/MutationObserver. (fn [] (js/setTimeout change-handlr))))
+(def obs (js/MutationObserver. (fn [] (js/setTimeout change-handler))))
+
+(defn listen-change [nodes]
+  (loop [nodes nodes]
+    (let [node (first nodes)
+          others (rest nodes)]
+      (if node (. node addEventListener "keydown" change-handler))
+      (if-not (empty? others)
+        (recur others)))))
 
 (defn init-changelog []
-  (change-handlr)
-  (. obs observe (doc-root) obs-conf))
+  (let [root (doc-root)]
+    (change-handler)
+    (listen-change (inputs root))
+    (. obs observe root obs-conf)))
 
 (defn main []
   (init-changelog))
