@@ -11,11 +11,21 @@
 (def lz js/LZString)
 
 (def prev-html (atom ""))
+(def prev-pos (atom {}))
+(def curr-pos (atom {}))
+
 (def changelog (atom []))
 
-(defn add-to-changelog [patch, timestamp]
-  (swap! changelog (fn [] (conj @changelog {:p patch
-                                            :t timestamp}))))
+(defn log-change [patch, timestamp]
+  (swap! changelog (fn [] (conj @changelog {:tp :change
+                                           :p patch
+                                           :tm timestamp}))))
+
+(defn log-mouse [e]
+  (swap! changelog (fn [] (conj @changelog e)))
+  (reset! prev-pos e))
+
+(defn now [] (. js/Date now))
 
 (def obs-conf #js {:attributes true
                    :childList true
@@ -33,6 +43,14 @@
 (defn links [root] (get-tags root "link"))
 (defn imgs [root] (get-tags root "img"))
 (defn inputs [root] (get-tags root "input"))
+
+;; (def clear-css "* { margin: 0; padding: 0; border: none; }")
+;; (defn clear-style [] (js/document.createElement "style"))
+
+;; (defn add-clear [root]
+;;   (let [style (clear-style)]
+;;     (aset style "innerHTML" clear-css)
+;;     (. (aget (. root getElementsByTagName "head") 0) appendChild style)))
 
 (defn del-nodes [nodes]
   (loop [nodes nodes]
@@ -67,24 +85,48 @@
         (recur others)))))
 
 (defn sanitize [root]
+  ;; (add-clear root)
   (del-nodes (scripts root))
   (abs-src (imgs root))
   (abs-href (links root))
   (cp-values (inputs root))
   root)
 
-(defn capture []
-  (.-outerHTML (sanitize (clone-root))))
+(defn capture [] (.-outerHTML (sanitize (clone-root))))
 
 (defn change-handler []
   (let [next-html (capture)
         patch (. dmp patch_make @prev-html next-html)]
     (if-not (empty? patch)
-      (add-to-changelog patch (. js/Date now)))
+      (log-change patch (now)))
     (js/console.log (clj->js @changelog))
     (reset! prev-html next-html)))
 
 (def obs (js/MutationObserver. (fn [] (js/setTimeout change-handler))))
+
+(defn mouse-ev [type, e] {:tp type
+                          :x (aget e "clientX")
+                          :y (aget e "clientY")
+                          :tm (now)})
+
+(defn pos-handler [type, e]
+  (reset! curr-pos (mouse-ev type e)))
+
+(defn pos-change [prev curr]
+  (let [prev-x (:x prev -1)
+        prev-y (:y prev -1)
+        curr-x (:x curr -1)
+        curr-y (:y curr -1)]
+    (or (not= prev-x curr-x)
+        (not= prev-y curr-y))))
+
+(defn pos-cycle []
+  (js/setInterval
+     (fn []
+       (let [prev @prev-pos
+             curr @curr-pos]
+         (if (pos-change prev curr) (log-mouse curr))))
+     500))
 
 (defn listen-change [nodes]
   (loop [nodes nodes]
@@ -94,9 +136,22 @@
       (if-not (empty? others)
         (recur others)))))
 
+(defn listen-move []
+  (js/addEventListener "mousemove" (fn [e] (pos-handler :move e)))
+  (pos-cycle))
+
+(defn listen-down []
+  (js/addEventListener "mousedown" (fn [e] (log-mouse (mouse-ev :down e)))))
+
+(defn listen-up []
+  (js/addEventListener "mouseup" (fn [e] (log-mouse (mouse-ev :up e)))))
+
 (defn init-changelog []
   (let [root (doc-root)]
     (change-handler)
+    (listen-move)
+    (listen-down)
+    (listen-up)
     (listen-change (inputs root))
     (. obs observe root obs-conf)))
 
