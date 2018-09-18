@@ -16,16 +16,20 @@
 
 (def changelog (atom []))
 
-(defn log-change [patch, timestamp]
-  (swap! changelog (fn [] (conj @changelog {:tp :change
-                                           :p patch
-                                           :tm timestamp}))))
-
-(defn log-mouse [e]
-  (swap! changelog (fn [] (conj @changelog e)))
-  (reset! prev-pos e))
-
 (defn now [] (. js/Date now))
+
+(defn log [ev]
+  (swap! changelog (fn [] (conj @changelog ev)))
+  (js/console.log (clj->js @changelog)))
+
+(defn log-change [patch]
+  (log {:tp :change
+        :p patch
+        :tm (now)}))
+
+(defn log-mouse [ev]
+  (log ev)
+  (reset! prev-pos ev))
 
 (def obs-conf #js {:attributes true
                    :childList true
@@ -98,8 +102,7 @@
   (let [next-html (capture)
         patch (. dmp patch_make @prev-html next-html)]
     (if-not (empty? patch)
-      (log-change patch (now)))
-    (js/console.log (clj->js @changelog))
+      (log-change patch))
     (reset! prev-html next-html)))
 
 (def obs (js/MutationObserver. (fn [] (js/setTimeout change-handler))))
