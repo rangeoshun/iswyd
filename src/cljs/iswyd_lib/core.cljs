@@ -5,10 +5,13 @@
 
 ;; -------------------------
 ;; Changelog
-;; TODO: Throttle recording?
+;; TODO: Throttle recording of changes?
+;; TODO: Decide to use absolute or relative times for changes
 
 (def dmp (js/diff_match_patch.))
 (def lz js/LZString)
+
+;; (def last-tm (atom 0))
 
 (def prev-html (atom ""))
 (def prev-pos (atom {}))
@@ -17,6 +20,12 @@
 (def changelog (atom []))
 
 (defn now [] (. js/Date now))
+
+;; (defn delta-tm [ev]
+;;   (let [t1 @last-tm
+;;         t2 (:tm ev)]
+;;     (reset! last-tm t2)
+;;     (- t2 t1)))
 
 (defn log [ev]
   (swap! changelog (fn [] (conj @changelog ev)))
