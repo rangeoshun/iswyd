@@ -22,7 +22,8 @@
 (defn current-page []
   [:div
    [:input {:placeholder "Some text here"}]
-   [@page]])
+   [@page]
+   (map (fn [n] [:h3 {:key n} n]) (range 0 16))])
 
 (secretary/defroute "/" []
   (reset! page #'home-page))
