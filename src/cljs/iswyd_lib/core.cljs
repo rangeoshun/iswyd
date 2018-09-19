@@ -193,7 +193,7 @@
      :y (.-scrollY js/window)
      :tm (now)}))
 
-(defn scroll-change [prev curr] (or (not= (:m prev "") (:m curr ""))
+(defn scroll-change [prev curr] (or ;; (not= (:m prev "") (:m curr ""))
                                     (not= (:x prev -1) (:x curr -1))
                                     (not= (:y prev -1) (:y curr -1))))
 
@@ -222,7 +222,7 @@
     (listen-change (inputs root))
     (. obs observe root obs-conf)))
 
-(defn compressed-log [] (lz.compressToBase64 (js/JSON.stringify (clj->js @changelog))))
+(defn compressed-log [] (lz.compress (js/JSON.stringify (clj->js @changelog))))
 
 (defn main []
   (init-changelog))
