@@ -17,6 +17,9 @@
 (def prev-pos (atom {}))
 (def curr-pos (atom {}))
 
+(def prev-scroll (atom {}))
+(def curr-scroll (atom {}))
+
 (def changelog (atom []))
 
 (defn now [] (. js/Date now))
@@ -29,7 +32,7 @@
 
 (defn log [ev]
   (swap! changelog (fn [] (conj @changelog ev)))
-  (js/console.log (clj->js @changelog)))
+  (js/console.log (clj->js ev)))
 
 (defn log-change [patch]
   (log {:tp :change
@@ -39,6 +42,10 @@
 (defn log-mouse [ev]
   (log ev)
   (reset! prev-pos ev))
+
+(defn log-scroll [ev]
+  (log ev)
+  (reset! prev-scroll ev))
 
 (def obs-conf #js {:attributes true
                    :childList true
@@ -116,21 +123,25 @@
 
 (def obs (js/MutationObserver. (fn [] (js/setTimeout change-handler))))
 
-(defn mouse-ev [type, e] {:tp type
-                          :x (aget e "clientX")
-                          :y (aget e "clientY")
-                          :tm (now)})
+(defn keys-num [ev]
+    (+ (if (aget ev "ctrlKey") 1 0)
+       (if (aget ev "shiftKey") 2 0)
+       (if (aget ev "altKey") 4 0)
+       (if (aget ev "metaKey") 8 0)))
 
-(defn pos-handler [type, e]
-  (reset! curr-pos (mouse-ev type e)))
+(defn mouse-ev [type, ev] {:tp type
+                           :bs (aget ev "buttons")
+                           :ks (keys-num ev)
+                           :x (aget ev "clientX")
+                           :y (aget ev "clientY")
+                           :tm (now)})
+
+(defn pos-handler [type, ev]
+  (reset! curr-pos (mouse-ev type ev)))
 
 (defn pos-change [prev curr]
-  (let [prev-x (:x prev -1)
-        prev-y (:y prev -1)
-        curr-x (:x curr -1)
-        curr-y (:y curr -1)]
-    (or (not= prev-x curr-x)
-        (not= prev-y curr-y))))
+    (or (not= (:x prev -1) (:x curr -1))
+        (not= (:y prev -1) (:y curr -1))))
 
 (defn pos-cycle []
   (js/setInterval
@@ -138,7 +149,8 @@
        (let [prev @prev-pos
              curr @curr-pos]
          (if (pos-change prev curr) (log-mouse curr))))
-     500))
+     300))
+
 
 (defn listen-change [nodes]
   (loop [nodes nodes]
@@ -149,14 +161,56 @@
         (recur others)))))
 
 (defn listen-move []
-  (js/addEventListener "mousemove" (fn [e] (pos-handler :move e)))
+  (js/addEventListener "mousemove" (fn [ev] (pos-handler :move ev)))
   (pos-cycle))
 
 (defn listen-down []
-  (js/addEventListener "mousedown" (fn [e] (log-mouse (mouse-ev :down e)))))
+  (js/addEventListener "mousedown" (fn [ev] (log-mouse (mouse-ev :down ev)))))
 
 (defn listen-up []
-  (js/addEventListener "mouseup" (fn [e] (log-mouse (mouse-ev :up e)))))
+  (js/addEventListener "mouseup" (fn [ev] (log-mouse (mouse-ev :up ev)))))
+
+(defn mark? [node] (. node getAttribute "data-iswyd-mark"))
+
+;; (defn mark [node]
+;;   (let [mark (mark? node)]
+;;     (js/console.log mark)
+;;     (if-not mark
+;;       ((fn [] (let [mark (random-uuid)]
+;;               (js/console.log mark)
+;;               (. node setAttribute "data-iswyd-mark" mark)
+;;               mark))))
+;;     mark))
+
+;; (defn scroll-target [node] (if (= node js/document) js/document.body node))
+
+(defn scroll-ev [type, ev]
+  (let [node (aget ev "target")]
+    {:tp type
+     ;; :m (mark node)
+     :ks (keys-num ev)
+     :x (.-scrollX js/window)
+     :y (.-scrollY js/window)
+     :tm (now)}))
+
+(defn scroll-change [prev curr] (or (not= (:m prev "") (:m curr ""))
+                                    (not= (:x prev -1) (:x curr -1))
+                                    (not= (:y prev -1) (:y curr -1))))
+
+(defn scroll-handler [type, ev]
+  (reset! curr-scroll (scroll-ev type ev)))
+
+(defn scroll-cycle []
+  (js/setInterval
+   (fn []
+     (let [prev @prev-scroll
+           curr @curr-scroll]
+       (if (scroll-change prev curr) (log-scroll curr))))
+   100))
+
+(defn listen-scroll []
+  (js/addEventListener "scroll" (fn [ev] (scroll-handler :scroll ev)))
+  (scroll-cycle))
 
 (defn init-changelog []
   (let [root (doc-root)]
@@ -164,6 +218,7 @@
     (listen-move)
     (listen-down)
     (listen-up)
+    (listen-scroll)
     (listen-change (inputs root))
     (. obs observe root obs-conf)))
 
