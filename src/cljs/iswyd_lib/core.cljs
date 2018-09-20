@@ -24,6 +24,15 @@
 
 (defn now [] (. js/Date now))
 
+(defn csrf-token []
+  (. (. js/document querySelector "meta[csrf-token]") getAttribute "csrf-token"))
+
+(defn post-change []
+  (let [changes @changelog]
+    (js/fetch "/api/change" #js {:method 'POST
+                                 :headers #js {:X-Csrf-Token (csrf-token)}
+                                 :body (. js/JSON stringify #js {:foo "bar"})})))
+
 ;; (defn delta-tm [ev]
 ;;   (let [t1 @last-tm
 ;;         t2 (:tm ev)]
@@ -230,6 +239,7 @@
 (def iswyd-ext #js {:init (fn [] (init-changelog))
                     :capture (fn [] (capture))
                     :changelog (fn [] (clj->js @changelog))
-                    :compressed (fn [] (compressed-log))})
+                    :compressed (fn [] (compressed-log))
+                    :postchange (fn [] (post-change))})
 
 (aset js/window "iSwyd" iswyd-ext)
