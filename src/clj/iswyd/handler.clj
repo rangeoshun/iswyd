@@ -1,14 +1,17 @@
 (ns iswyd.handler
-  (:require [compojure.core :refer [POST GET defroutes context]]
-            [compojure.route :refer [not-found resources]]
+  (:require [compojure.core :refer :all]
+            [compojure.route :as route]
             [hiccup.page :refer [include-js include-css html5]]
             [iswyd.middleware :refer [wrap-middleware]]
             [config.core :refer [env]]
+            [cheshire.core :as json]
+            [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
+            [ring.middleware.reload :refer [wrap-reload]]
             [ring.middleware.anti-forgery :refer [*anti-forgery-token*]]))
 
 (def mount-target
   [:div#app
-      [:h3 "Loading..."]])
+   [:h3 "Loading..."]])
 
 (defn head []
   [:head
@@ -20,23 +23,28 @@
 
 (defn loading-page []
   (html5
-    (head)
-    [:body {:class "body-container"}
-     mount-target
-     (include-js "/js/app.js")
-     (include-js "/js/iswyd-lib.js")]))
+   (head)
+   [:body {:class "body-container"}
+    mount-target
+    (include-js "/js/app.js")
+    (include-js "/js/iswyd-lib.js")]))
 
-(defn api-dummy [req] (print req))
+(defn api-dummy [handler]
+  (fn [req]
+    (println (slurp (:body req)))
+    {:status 200
+     :body (json/generate-string
+            {:errors []
+             :success true})}))
 
-(defroutes routes
+(defroutes app-routes
   (GET "/" [] (loading-page))
   (GET "/about" [] (loading-page))
 
-  ;; FIXME: why 404?
-  (context "/api" []
-           (POST "/change" [req] (api-dummy req)))
+  (POST "/api/changes" req (api-dummy req))
 
-  (resources "/")
-  (not-found "Not Found"))
+  ;;(resources "/")
+  (route/not-found "Not Found"))
 
-(def app (wrap-middleware #'routes))
+(def app
+  (wrap-reload (wrap-defaults app-routes (assoc-in site-defaults [:security :anti-forgery] false))))

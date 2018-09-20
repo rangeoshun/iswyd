@@ -30,8 +30,8 @@
 (defn post-change []
   (let [changes @changelog]
     (js/fetch "/api/change" #js {:method 'POST
-                                 :headers #js {:X-Csrf-Token (csrf-token)}
-                                 :body (. js/JSON stringify #js {:foo "bar"})})))
+                              :headers #js {:x-csrf-token (csrf-token)}
+                              :body (. js/JSON stringify #js {:foo "bar"})})))
 
 ;; (defn delta-tm [ev]
 ;;   (let [t1 @last-tm
