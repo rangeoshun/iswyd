@@ -1,15 +1,12 @@
 (ns iswyd-lib.core
   (:require [goog.dom :as dom]
-            [cljsjs.google-diff-match-patch]
-            [cljsjs.lz-string]
-            [clojure.string :as cstr]))
+            [cljsjs.lz-string]))
 
 ;; -------------------------
 ;; Changelog
 ;; TODO: Throttle recording of changes?
 ;; TODO: Decide to use absolute or relative times for changes
 
-(def dmp (js/diff_match_patch.))
 (def lz js/LZString)
 
 ;; (def last-tm (atom 0))
@@ -26,18 +23,7 @@
 (defn now [] (. (js/Date.) getTime))
 
 (defn csrf-token []
-  (. (. js/document querySelector "meta[csrf-token]") getAttribute "csrf-token"))
-
-(defn compress [log] (lz.compress (js/JSON.stringify (clj->js log))))
-
-(defn post-change []
-  (let [changes @changelog]
-    (reset! changelog [])
-    (js/fetch
-     ;; (:api-changes-url env)
-     "http://0.0.0.0:3449/api/changes"
-     #js {:method 'POST
-          :body (. js/JSON stringify (compress changes))})))
+  (.getAttribute (.querySelector js/document "meta[csrf-token]") "csrf-token"))
 
 ;; (defn delta-tm [ev]
 ;;   (let [t1 @last-tm
@@ -112,7 +98,7 @@
   (loop [nodes nodes]
     (let [node (first nodes)
           others (rest nodes)]
-      (if node (. node setAttribute "value" (.-value node)))
+      (if node (.setAttribute node "value" (.-value node)))
       (if-not (empty? others)
         (recur others)))))
 
@@ -127,19 +113,31 @@
 (defn capture [] (.-outerHTML (sanitize (clone-root))))
 
 (def obs-conf #js {:attributes true
-                   :childList true
-                   :subtree true})
+                 :childList true
+                 :subtree true})
+
+(defn init-worker []
+  (js/Worker. "http://0.0.0.0:3449/js/bootstrap_worker.js"))
+
+(defonce worker (init-worker))
 
 (defn change-handler []
-  (js/setTimeout
-   (fn []
-     (let [html (capture)]
-       (js/setTimeout (fn []
-                        (log-change (. dmp patch_make @prev-html html))
-                        (reset! prev-html html)))
-           ))))
+  (let [html (capture)]
+    (.postMessage worker (clj->js [@prev-html, html]))
+    (reset! prev-html html)))
 
 (def obs (js/MutationObserver. (fn [] (change-handler))))
+
+(defn compress [log] (lz.compress (js/JSON.stringify (clj->js log))))
+
+(defn post-change []
+  (let [changes @changelog]
+    (reset! changelog [])
+    (js/fetch
+     ;; (:api-changes-url env)
+     "http://0.0.0.0:3449/api/changes"
+     #js {:method 'POST
+          :body (.stringify js/JSON (compress changes))})))
 
 (defn keys-num [ev]
     (+ (if (aget ev "ctrlKey") 1 0)
@@ -148,11 +146,11 @@
        (if (aget ev "metaKey") 8 0)))
 
 (defn mouse-ev [type, ev] {:tp type
-                         :bs (aget ev "buttons")
-                         :ks (keys-num ev)
-                         :x (aget ev "clientX")
-                         :y (aget ev "clientY")
-                         :tm (now)})
+                           :bs (aget ev "buttons")
+                           :ks (keys-num ev)
+                           :x (aget ev "clientX")
+                           :y (aget ev "clientY")
+                           :tm (now)})
 
 (defn pos-handler [type, ev]
   (reset! curr-pos (mouse-ev type ev)))
@@ -188,7 +186,7 @@
 (defn listen-up []
   (js/addEventListener "mouseup" (fn [ev] (log-mouse (mouse-ev :up ev)))))
 
-(defn mark? [node] (. node getAttribute "data-iswyd-mark"))
+(defn mark? [node] (.getAttribute node "data-iswyd-mark"))
 
 ;; (defn mark [node]
 ;;   (let [mark (mark? node)]
@@ -238,7 +236,9 @@
     (listen-up)
     (listen-scroll)
     (listen-change (inputs root))
-    (. obs observe root obs-conf)))
+    (. obs observe root obs-conf))
+  (set! (.-onmessage worker) (fn [msg]
+                               (log-change (.-data msg)))))
 
 (defn main []
   (init-changelog))
