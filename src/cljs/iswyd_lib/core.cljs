@@ -1,7 +1,8 @@
 (ns iswyd-lib.core
   (:require [goog.dom :as dom]
             [cljsjs.google-diff-match-patch]
-            [cljsjs.lz-string]))
+            [cljsjs.lz-string]
+            [clojure.string :as cstr]))
 
 ;; -------------------------
 ;; Changelog
@@ -22,16 +23,21 @@
 
 (def changelog (atom []))
 
-(defn now [] (. js/Date now))
+(defn now [] (. (js/Date.) getTime))
 
 (defn csrf-token []
   (. (. js/document querySelector "meta[csrf-token]") getAttribute "csrf-token"))
 
+(defn compress [log] (lz.compress (js/JSON.stringify (clj->js log))))
+
 (defn post-change []
   (let [changes @changelog]
-    (js/fetch "/api/change" #js {:method 'POST
-                              :headers #js {:x-csrf-token (csrf-token)}
-                              :body (. js/JSON stringify #js {:foo "bar"})})))
+    (reset! changelog [])
+    (js/fetch
+     ;; (:api-changes-url env)
+     "http://0.0.0.0:3449/api/changes"
+     #js {:method 'POST
+          :body (. js/JSON stringify (compress changes))})))
 
 ;; (defn delta-tm [ev]
 ;;   (let [t1 @last-tm
@@ -41,7 +47,8 @@
 
 (defn log [ev]
   (swap! changelog (fn [] (conj @changelog ev)))
-  (js/console.log (clj->js ev)))
+  ;;(js/console.log (clj->js ev))
+  )
 
 (defn log-change [patch]
   (log {:tp :change
@@ -55,10 +62,6 @@
 (defn log-scroll [ev]
   (log ev)
   (reset! prev-scroll ev))
-
-(def obs-conf #js {:attributes true
-                   :childList true
-                   :subtree true})
 
 (defn doc-root [] (aget js/document.children 0))
 
@@ -123,14 +126,20 @@
 
 (defn capture [] (.-outerHTML (sanitize (clone-root))))
 
-(defn change-handler []
-  (let [next-html (capture)
-        patch (. dmp patch_make @prev-html next-html)]
-    (if-not (empty? patch)
-      (log-change patch))
-    (reset! prev-html next-html)))
+(def obs-conf #js {:attributes true
+                   :childList true
+                   :subtree true})
 
-(def obs (js/MutationObserver. (fn [] (js/setTimeout change-handler))))
+(defn change-handler []
+  (js/setTimeout
+   (fn []
+     (let [html (capture)]
+       (js/setTimeout (fn []
+                        (log-change (. dmp patch_make @prev-html html))
+                        (reset! prev-html html)))
+           ))))
+
+(def obs (js/MutationObserver. (fn [] (change-handler))))
 
 (defn keys-num [ev]
     (+ (if (aget ev "ctrlKey") 1 0)
@@ -139,11 +148,11 @@
        (if (aget ev "metaKey") 8 0)))
 
 (defn mouse-ev [type, ev] {:tp type
-                           :bs (aget ev "buttons")
-                           :ks (keys-num ev)
-                           :x (aget ev "clientX")
-                           :y (aget ev "clientY")
-                           :tm (now)})
+                         :bs (aget ev "buttons")
+                         :ks (keys-num ev)
+                         :x (aget ev "clientX")
+                         :y (aget ev "clientY")
+                         :tm (now)})
 
 (defn pos-handler [type, ev]
   (reset! curr-pos (mouse-ev type ev)))
@@ -231,15 +240,13 @@
     (listen-change (inputs root))
     (. obs observe root obs-conf)))
 
-(defn compressed-log [] (lz.compress (js/JSON.stringify (clj->js @changelog))))
-
 (defn main []
   (init-changelog))
 
 (def iswyd-ext #js {:init (fn [] (init-changelog))
-                    :capture (fn [] (capture))
-                    :changelog (fn [] (clj->js @changelog))
-                    :compressed (fn [] (compressed-log))
-                    :postchange (fn [] (post-change))})
+                  :capture (fn [] (capture))
+                  :changelog (fn [] (clj->js @changelog))
+                  :compressed (fn [] (compress @changelog))
+                  :postchange (fn [] (post-change))})
 
 (aset js/window "iSwyd" iswyd-ext)
