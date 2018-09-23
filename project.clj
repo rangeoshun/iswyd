@@ -16,6 +16,7 @@
                  [org.clojure/clojurescript "1.10.339"
                   :scope "provided"]
                  [secretary "1.2.3"]
+                 [com.novemberain/monger "3.1.0"]
                  [venantius/accountant "0.2.4"
                   :exclusions [org.clojure/tools.reader]]
                  [cljsjs/google-diff-match-patch "20121119-2"]
