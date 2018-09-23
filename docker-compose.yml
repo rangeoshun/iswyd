@@ -1,0 +1,22 @@
+version: "3.7"
+services:
+  dev-app:
+    image: clojure:lein-2.8.1
+    restart: always
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/app
+    working_dir: "/app"
+    ports:
+      - 3449:3449
+      - 7002:7002
+    command: bash -c "lein figwheel app lib worker & tail -f figwheel_server.log"
+  dev-db:
+    image: mongo:3.4
+    restart: always
+    ports:
+      - 27017:27017
+    volumes:
+      - ./data/db:/data
+    command: "mongod"
