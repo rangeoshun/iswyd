@@ -18,6 +18,8 @@ services:
       - app
       - lib
       - worker
+    links:
+      - dev-db:dev-db
   dev-db:
     image: mongo:3.4
     restart: always
