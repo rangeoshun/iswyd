@@ -6,12 +6,13 @@ services:
     stdin_open: true
     tty: true
     volumes:
-      - .:/app
+      - "nfsapp:/app"
+      - "nfsm2:/root/.m2"
     working_dir: "/app"
     ports:
       - 3449:3449
       - 7002:7002
-    command: bash -c "lein figwheel app lib worker & tail -f figwheel_server.log"
+    command: bash -c "lein figwheel app lib worker | tail -f figwheel_server.log"
   dev-db:
     image: mongo:3.4
     restart: always
@@ -20,3 +21,17 @@ services:
     volumes:
       - ./data/db:/data
     command: "mongod"
+
+volumes:
+  nfsapp:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=host.docker.internal,rw,nolock,hard,nointr,nfsvers=3
+      device: ":${PWD}"
+  nfsm2:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=host.docker.internal,rw,nolock,hard,nointr,nfsvers=3
+      device: ":${PWD}/../../.m2"
