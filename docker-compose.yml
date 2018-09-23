@@ -12,7 +12,12 @@ services:
     ports:
       - 3449:3449
       - 7002:7002
-    command: bash -c "lein figwheel app lib worker | tail -f figwheel_server.log"
+    entrypoint:
+      - lein
+      - figwheel
+      - app
+      - lib
+      - worker
   dev-db:
     image: mongo:3.4
     restart: always
