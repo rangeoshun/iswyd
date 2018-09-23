@@ -1,10 +1,10 @@
 version: "3.7"
 services:
-  dev-app:
+  dev_app:
     image: clojure:lein-2.8.1
     restart: always
-    stdin_open: true
-    tty: true
+    # stdin_open: true
+    # tty: true
     volumes:
       - "nfsapp:/app"
       - "nfsm2:/root/.m2"
@@ -12,15 +12,10 @@ services:
     ports:
       - 3449:3449
       - 7002:7002
-    entrypoint:
-      - lein
-      - figwheel
-      - app
-      - lib
-      - worker
-    links:
-      - dev-db:dev-db
-  dev-db:
+    entrypoint: lein figwheel app lib worker
+    networks:
+      - dev_net
+  dev_db:
     image: mongo:3.4
     restart: always
     ports:
@@ -28,6 +23,10 @@ services:
     volumes:
       - ./data/db:/data
     command: "mongod"
+    networks:
+      dev_net:
+        aliases:
+          - mongodb
 
 volumes:
   nfsapp:
@@ -42,3 +41,6 @@ volumes:
       type: nfs
       o: addr=host.docker.internal,rw,nolock,hard,nointr,nfsvers=3
       device: ":${PWD}/../../.m2"
+
+networks:
+  dev_net:
