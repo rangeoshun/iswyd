@@ -49,12 +49,14 @@
              :compiler
              {:externs ["iswyd-lib.ext.js"]
               :output-to "target/cljsbuild/public/js/iswyd-lib.min.js"
+              :output-dir "target/cljsbuild/public/js/min-lib-out"
               :optimizations :advanced
               :pretty-print  false}}
             :min-worker
             {:source-paths ["src/cljs/iswyd_worker"]
              :compiler
              {:output-to "target/cljsbuild/public/js/iswyd-worker.min.js"
+              :output-dir "target/cljsbuild/public/js/min-worker-out"
               :optimizations :advanced
               :pretty-print  true}}
             :worker
