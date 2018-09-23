@@ -8,7 +8,8 @@
         (fn [msg]
           (let [data (.-data msg)
                 prev (aget data 0)
-                next (aget data 1)]
-            (.postMessage js/self (. dmp patch_make prev next))))))
+                next (aget data 1)
+                patch (.patch_make dmp prev next)]
+            (.postMessage js/self (.patch_toText dmp patch))))))
 
 (init)
