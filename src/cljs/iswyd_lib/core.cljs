@@ -37,9 +37,10 @@
   )
 
 (defn log-change [patch]
-  (log {:tp :change
-        :p patch
-        :tm (now)}))
+  (if-not (empty? patch)
+    (log {:tp :change
+          :p patch
+          :tm (now)})))
 
 (defn log-mouse [ev]
   (log ev)
