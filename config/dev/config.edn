@@ -1,2 +1,3 @@
 {:dev true
- :api-changes-url "http://0.0.0.0:3449/api/changes"}
+ :api-changes-url "http://0.0.0.0:3449/api/changes"
+ :mongo-host "mongodb"}
