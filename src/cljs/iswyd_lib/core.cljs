@@ -22,8 +22,8 @@
 
 (defn now [] (. (js/Date.) getTime))
 
-(defn csrf-token []
-  (.getAttribute (.querySelector js/document "meta[csrf-token]") "csrf-token"))
+;; (defn csrf-token []
+;;   (.getAttribute (.querySelector js/document "meta[csrf-token]") "csrf-token"))
 
 ;; (defn delta-tm [ev]
 ;;   (let [t1 @last-tm
