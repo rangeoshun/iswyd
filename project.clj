@@ -45,7 +45,7 @@
    {"resources/public/css/site.min.css" "resources/public/css/site.css"}}
 
   :cljsbuild
-  {:builds {:min
+  {:builds {:min-lib
             {:source-paths ["src/cljs/iswyd_lib"]
              :compiler
              {:externs ["iswyd-lib.ext.js"]
@@ -89,6 +89,7 @@
 
   :figwheel
   {:http-server-root "public"
+   :repl false
    :server-port 3449
    :nrepl-port 7002
    :nrepl-middleware [cider.piggieback/wrap-cljs-repl]
