@@ -26,9 +26,6 @@
             [lein-asset-minifier "0.2.7"
              :exclusions [org.clojure/clojure]]]
 
-  :ring {:handler iswyd.handler/app
-         :uberwar-name "iswyd.war"}
-
   :min-lein-version "2.5.0"
   :uberjar-name "iswyd.warswyd.jar"
   :main iswyd.server
@@ -96,27 +93,33 @@
    :css-dirs ["resources/public/css"]
    :ring-handler iswyd.handler/app}
 
-  :profiles {:prod {:resource-paths ["config/prod"]}
-            :dev {:repl-options {:init-ns iswyd.repl}
-                  :dependencies [[cider/piggieback "0.3.8"]
-                                 [binaryage/devtools "0.9.10"]
-                                 [ring/ring-mock "0.3.2"]
-                                 [ring/ring-devel "1.6.3"]
-                                 [prone "1.5.2"]
-                                 [figwheel-sidecar "0.5.16"]
-                                 [nrepl "0.4.4"]
-                                 [cider/piggieback "0.3.8"]
-                                 [pjstadig/humane-test-output "0.8.3"]]
+  :profiles {:changes-srv-dev {:plugins [[lein-ring "0.12.1"]]
+                               :ring {:port 3000
+                                      :handler iswyd.services.changes.core/main
+                                      :open-browser? false}}
 
-                  :source-paths ["env/dev/clj"]
-                  :plugins [[lein-figwheel "0.5.16"]]
+             :prod {:resource-paths ["config/prod"]}
 
-                  :resource-paths ["config/dev"]
+             :dev {:repl-options {:init-ns iswyd.repl}
+                   :dependencies [[cider/piggieback "0.3.8"]
+                                  [binaryage/devtools "0.9.10"]
+                                  [ring/ring-mock "0.3.2"]
+                                  [ring/ring-devel "1.6.3"]
+                                  [prone "1.5.2"]
+                                  [figwheel-sidecar "0.5.16"]
+                                  [nrepl "0.4.4"]
+                                  [cider/piggieback "0.3.8"]
+                                  [pjstadig/humane-test-output "0.8.3"]]
 
-                  :injections [(require 'pjstadig.humane-test-output)
-                               (pjstadig.humane-test-output/activate!)]
+                   :source-paths ["env/dev/clj"]
+                   :plugins [[lein-figwheel "0.5.16"]]
 
-                  :env {:dev true}}
+                   :resource-paths ["config/dev"]
+
+                   :injections [(require 'pjstadig.humane-test-output)
+                                (pjstadig.humane-test-output/activate!)]
+
+                   :env {:dev true}}
 
              :uberjar {:hooks [minify-assets.plugin/hooks]
                        :source-paths ["env/prod/clj"]
