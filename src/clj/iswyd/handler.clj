@@ -39,7 +39,7 @@
 
 (defn wrap-session-id-cookie [handler]
   (fn [req]
-    (let [session-id (:iswyd-session-id (:cookies req))]
+    (let [session-id (:value (:iswyd-session-id (:cookies req)))]
       (if-not session-id (assoc-in (handler req) [:cookies :iswyd-session-id] (uuid))))))
 
 (def app
