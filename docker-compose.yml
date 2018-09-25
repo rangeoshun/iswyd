@@ -1,6 +1,6 @@
 version: "3.7"
 services:
-  dev_app:
+  app:
     image: clojure:lein-2.8.1
     restart: always
     # stdin_open: true
@@ -12,10 +12,23 @@ services:
     ports:
       - 3449:3449
       - 7002:7002
-    entrypoint: lein figwheel app lib worker
+    entrypoint: lein trampoline figwheel app lib worker
     networks:
       - dev_net
-  dev_db:
+  changes_srv:
+    image: clojure:lein-2.8.1
+    restart: always
+    volumes:
+      - "nfsapp:/app"
+      - "nfsm2:/root/.m2"
+    working_dir: "/app"
+    ports:
+      - 3000:3000
+      - 7002:7002
+    entrypoint: lein with-profile +changes-srv-dev ring server-headless
+    networks:
+      - dev_net
+  db:
     image: mongo:3.4
     restart: always
     ports:
