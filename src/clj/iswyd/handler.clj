@@ -33,7 +33,6 @@
 (defroutes app-routes
   (GET "/" [] (loading-page))
   (GET "/about" [] (loading-page))
-
   (route/resources "/")
   (route/not-found "Not Found"))
 
