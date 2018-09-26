@@ -7,7 +7,7 @@
 ;; Views
 
 (defn home-page []
-  [:div [:h2 "Welcome to iSwyd"]
+  [:div [:h2 "Welcome to iSwyd??"]
    [:div [:a {:href "/about"} "go to about page"]]])
 
 (defn about-page []

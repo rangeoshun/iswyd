@@ -88,13 +88,15 @@
   {:http-server-root "public"
    :repl false
    :server-port 3449
+   :server-ip "0.0.0.0"
    :nrepl-port 7002
+   :hawk-options {:watcher :polling}
    :nrepl-middleware [cider.piggieback/wrap-cljs-repl]
    :css-dirs ["resources/public/css"]
    :ring-handler iswyd.handler/app}
 
   :profiles {:changes-srv-dev {:plugins [[lein-ring "0.12.1"]]
-                               :ring {:port 3000
+                               :ring {:port 3450
                                       :handler iswyd.services.changes.core/main
                                       :open-browser? false}}
 

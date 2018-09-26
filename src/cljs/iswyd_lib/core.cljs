@@ -118,7 +118,7 @@
                  :subtree true})
 
 (defn init-worker []
-  (js/Worker. "http://0.0.0.0:3449/js/bootstrap_worker.js"))
+  (js/Worker. "/js/bootstrap_worker.js"))
 
 (defonce worker (init-worker))
 
@@ -136,7 +136,7 @@
     (reset! changelog [])
     (js/fetch
      ;; (:api-changes-url env)
-     "http://0.0.0.0:3449/api/changes"
+     "http://127.0.0.1:3001/"
      #js {:method 'POST
           :body (.stringify js/JSON (compress changes))})))
 
@@ -245,9 +245,9 @@
   (init-changelog))
 
 (def iswyd-ext #js {:init (fn [] (init-changelog))
-                  :capture (fn [] (capture))
-                  :changelog (fn [] (clj->js @changelog))
-                  :compressed (fn [] (compress @changelog))
-                  :postchange (fn [] (post-change))})
+                    :capture (fn [] (capture))
+                    :changelog (fn [] (clj->js @changelog))
+                    :compressed (fn [] (compress @changelog))
+                    :postchange (fn [] (post-change))})
 
 (aset js/window "iSwyd" iswyd-ext)

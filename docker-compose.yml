@@ -6,25 +6,24 @@ services:
     # stdin_open: true
     # tty: true
     volumes:
-      - "nfsapp:/app"
-      - "nfsm2:/root/.m2"
+      - .:/app
+      - ../../.m2:/root/.m2
     working_dir: "/app"
     ports:
       - 3449:3449
       - 7002:7002
-    entrypoint: lein trampoline figwheel app lib worker
+    entrypoint: lein figwheel app lib worker
     networks:
       - dev_net
   changes_srv:
     image: clojure:lein-2.8.1
     restart: always
     volumes:
-      - "nfsapp:/app"
-      - "nfsm2:/root/.m2"
+      - .:/app
+      - ../../.m2:/root/.m2
     working_dir: "/app"
     ports:
-      - 3000:3000
-      - 7002:7002
+      - 3450:3450
     entrypoint: lein with-profile +changes-srv-dev ring server-headless
     networks:
       - dev_net
@@ -40,20 +39,6 @@ services:
       dev_net:
         aliases:
           - mongodb
-
-volumes:
-  nfsapp:
-    driver: local
-    driver_opts:
-      type: nfs
-      o: addr=host.docker.internal,rw,nolock,hard,nointr,nfsvers=3
-      device: ":${PWD}"
-  nfsm2:
-    driver: local
-    driver_opts:
-      type: nfs
-      o: addr=host.docker.internal,rw,nolock,hard,nointr,nfsvers=3
-      device: ":${PWD}/../../.m2"
 
 networks:
   dev_net:
