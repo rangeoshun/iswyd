@@ -1,14 +1,14 @@
 (ns iswyd.handler
-  (:require [compojure.core :refer :all]
+  (:require [clojure.tools.logging :as log]
+            [compojure.core :refer :all]
             [compojure.route :as route]
-            [hiccup.page :refer [include-js include-css html5]]
             [config.core :refer [env]]
-            [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
-            [ring.middleware.reload :refer [wrap-reload]]
+            [hiccup.page :refer [include-js include-css html5]]
+            [monger.util :as mu]
             [ring.middleware.anti-forgery :refer [*anti-forgery-token*]]
             [ring.middleware.cookies :refer [wrap-cookies]]
-            [config.core :refer [env]]
-            [iswyd.utils :refer [uuid]]))
+            [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
+            [ring.middleware.reload :refer [wrap-reload]]))
 
 (def mount-target
   [:div#app
@@ -38,12 +38,15 @@
   (route/not-found "Not Found"))
 
 (defn wrap-session-id-cookie [handler]
-  (fn [req]
-    (let [session-id (:value ((:cookies req) "iswyd-session-id"))]
-      (if-not session-id (assoc-in (handler req) [:cookies :iswyd-session-id] (uuid))))))
+  (fn [request]
+    (let [session-id (get-in request [:cookies "iswyd-session" :value])
+          session-id? (empty? session-id)]
+    (log/info session-id session-id?)
+    (log/info (empty? session-id))
+    (if session-id? (assoc (handler request) :cookies {"iswyd-session" {:value (mu/random-uuid)}})
+    (handler request)))))
 
 (def app
   (wrap-cookies
-   (wrap-session-id-cookie app-routes
-    (wrap-reload
-     (wrap-defaults  (assoc-in site-defaults [:security :anti-forgery] false))))))
+   (wrap-session-id-cookie
+    (wrap-defaults app-routes site-defaults))))

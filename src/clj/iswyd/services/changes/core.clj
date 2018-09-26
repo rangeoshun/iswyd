@@ -1,10 +1,9 @@
 (ns iswyd.services.changes.core
-  (:require [config.core :refer [env]]
+  (:require [cheshire.core :as json]
             [clojure.tools.logging :as log]
-            [iswyd.utils :refer [uuid]]
-            [monger.core :as mg]
-            [cheshire.core :as json]
+            [config.core :refer [env]]
             [monger.collection :as mc]
+            [monger.core :as mg]
             [monger.util :as mu]
             [ring.middleware.cookies :as rm])
   (:import (com.mongodb MongoOptions ServerAddress)
@@ -17,7 +16,7 @@
 
 (defn changes-handler [request]
   (let [data (slurp (:body request))
-        session-id (:value ((:cookies request) "iswyd-session-id"))]
+        session-id (:value ((:cookies request) "iswyd-session"))]
     (if (and session-id data)
       (mc/insert db "changes" {:_id (mu/random-uuid)
                                :session_id session-id
