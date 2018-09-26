@@ -134,6 +134,7 @@
 (defn post-change []
   (let [changes @changelog]
     (reset! changelog [])
+    (reset! prev-html "")
     (js/fetch
      ;; (:api-changes-url env)
      "http://127.0.0.1:3001/"
