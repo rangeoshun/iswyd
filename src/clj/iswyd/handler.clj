@@ -39,12 +39,10 @@
 
 (defn wrap-session-id-cookie [handler]
   (fn [request]
-    (let [session-id (get-in request [:cookies "iswyd-session" :value])
-          session-id? (empty? session-id)]
-    (log/info session-id session-id?)
-    (log/info (empty? session-id))
-    (if session-id? (assoc (handler request) :cookies {"iswyd-session" {:value (mu/random-uuid)}})
-    (handler request)))))
+    (let [session-id (get-in request [:cookies "iswyd-session" :value])]
+      (if (empty? session-id)
+        (assoc-in (handler request) [:cookies "iswyd-session"] {:value (mu/random-uuid)})
+        (handler request)))))
 
 (def app
   (wrap-cookies
