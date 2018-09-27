@@ -10,6 +10,8 @@
                  [reagent-utils "0.3.1"]
                  [ring "1.6.3"]
                  [ring/ring-defaults "0.3.1"]
+                 [overtone/at-at "1.2.0"]
+                 [com.diogodualibe.lzstring4j/lzstring4j "2"]
                  [compojure "1.6.1"]
                  [hiccup "1.0.5"]
                  [yogthos/config "1.1.1"]
@@ -99,6 +101,11 @@
                                :ring {:port 3450
                                       :handler iswyd.services.changes.core/main
                                       :open-browser? false}}
+
+             :cue-srv-dev {:plugins [[lein-ring "0.12.1"]]
+                           :ring {:port 3451
+                                  :handler iswyd.services.cue.core/main
+                                  :open-browser? false}}
 
              :prod {:resource-paths ["config/prod"]}
 

@@ -27,6 +27,18 @@ services:
     entrypoint: lein with-profile +changes-srv-dev ring server-headless
     networks:
       - dev_net
+  cue_srv:
+    image: clojure:lein-2.8.1
+    restart: always
+    volumes:
+      - .:/app
+      - ../../.m2:/root/.m2
+    working_dir: "/app"
+    ports:
+      - 3451:3451
+    entrypoint: lein with-profile +cue-srv-dev ring server-headless
+    networks:
+      - dev_net
   db:
     image: mongo:3.4
     restart: always

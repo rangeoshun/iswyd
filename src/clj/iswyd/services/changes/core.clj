@@ -18,8 +18,10 @@
 
 (defn insert-change [session-id data]
   (mc/insert db "changes" {:_id (mu/random-uuid)
+                           :locked false
                            :session_id session-id
                            :data data}))
+
 (defn handle-change [session-id data]
   (insert-change session-id data)
   {:status 200
@@ -39,7 +41,7 @@
                  :success false})})))
 
 (defroutes service-routes
-  (POST "/" req (changes-handler req))
+  (POST "/" request (changes-handler request))
   (route/resources "/")
   (route/not-found {:status 405
                     :body (json/generate-string
