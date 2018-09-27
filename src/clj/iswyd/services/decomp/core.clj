@@ -18,12 +18,12 @@
                             (client/keyword-deserializer)
                             (client/edn-deserializer)))
 
-(client/subscribe! c (:raw-topic env))
-(client/poll! c 100)
-
 (defn decomp-change [msg]
   (client/send! p (:decomp-topic env) :c
-                (merge (:c msg) {:change (.decompress LZString (:data change))})))
+                (merge (:c msg) {:change (.decompress LZString (get-in msg :c :change))})))
+
+(client/subscribe! c (:raw-topic env) decomp-change)
+(client/poll! c 100)
 
 (defroutes srv-routes
   (GET "/" request (fn [request] {:status 200 :body "OK"})))
