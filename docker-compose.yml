@@ -15,42 +15,57 @@ services:
     entrypoint: lein figwheel app lib worker
     networks:
       - dev_net
-  changes_srv:
+  change_srv:
     image: clojure:lein-2.8.1
     restart: always
-    volumes:
-      - .:/app
-      - ../../.m2:/root/.m2
-    working_dir: "/app"
     ports:
       - 3450:3450
-    entrypoint: lein with-profile +changes-srv-dev ring server-headless
-    networks:
-      - dev_net
-  cue_srv:
-    image: clojure:lein-2.8.1
-    restart: always
+    hostname: changes_srv
     volumes:
       - .:/app
       - ../../.m2:/root/.m2
     working_dir: "/app"
-    ports:
-      - 3451:3451
-    entrypoint: lein with-profile +cue-srv-dev ring server-headless
+    entrypoint: lein with-profile +changes-srv-dev run ring server-headless
     networks:
       - dev_net
-  db:
+  decomp_srv:
+    image: clojure:lein-2.8.1
+    restart: always
+    ports:
+      - 3451:3451
+    hostname: cue_srv
+    volumes:
+      - .:/app
+      - ../../.m2:/root/.m2
+    working_dir: "/app"
+    entrypoint: lein with-profile +decomp-srv-dev run ring server-headless
+    networks:
+      - dev_net
+  kafka:
+    image: spotify/kafka
+    restart: always
+    ports:
+      - 9092:9092
+      - 2181:2181
+    hostname: kafka
+    environment:
+      TOPICS: changes
+      ADVERTISED_HOST: kafka
+      ADVERTISED_PORT: 9092
+      AUTO_CREATE_TOPICS: 'true'
+    networks:
+      - dev_net
+  mongodb:
     image: mongo:3.4
     restart: always
     ports:
       - 27017:27017
+    hostname: mongodb
     volumes:
       - ./data/db:/data
     command: "mongod"
     networks:
-      dev_net:
-        aliases:
-          - mongodb
+      - dev_net
 
 networks:
   dev_net:

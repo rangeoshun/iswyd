@@ -1,29 +1,25 @@
-(ns iswyd.services.changes.core
+(ns iswyd.services.change.core
   (:require [cheshire.core :as json]
             [clojure.tools.logging :as log]
             [config.core :refer [env]]
             [compojure.core :refer :all]
             [compojure.route :as route]
-            [monger.collection :as mc]
-            [monger.core :as mg]
-            [monger.util :as mu]
-            [ring.middleware.cookies :as rm])
-  (:import (com.mongodb MongoOptions ServerAddress)
-           org.bson.types.ObjectId))
+            [kinsky.client :as client]
+            [kinsky.async :as async]
+            [ring.middleware.cookies :as rm]))
 
 ;; TODO: Find out what is the idiomatic way to handle errors
 
-(defonce conn (mg/connect {:host (env :mongo-host)}))
-(defonce db (mg/get-db conn "iswyd"))
+(defonce p (client/producer {:bootstrap.servers (:kafka-host env)}
+                            (client/keyword-serializer)
+                            (client/edn-serializer)))
 
-(defn insert-change [session-id data]
-  (mc/insert db "changes" {:_id (mu/random-uuid)
-                           :locked false
-                           :session_id session-id
-                           :data data}))
+(defn pub-change [session-id data]
+  (client/send! p (:raw-topic env) :change {:session_id session-id
+                                            :data data}))
 
 (defn handle-change [session-id data]
-  (insert-change session-id data)
+  (pub-change session-id data)
   {:status 200
    :body (json/generate-string
           {:errors []
@@ -42,10 +38,9 @@
 
 (defroutes service-routes
   (POST "/" request (changes-handler request))
-  (route/resources "/")
   (route/not-found {:status 405
                     :body (json/generate-string
-                           {:errors ["Method not allowed."]
+                           {:errors  ["Method not allowed."]
                             :success false})}))
 
 (def main

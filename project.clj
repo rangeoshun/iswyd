@@ -4,25 +4,27 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
-  :dependencies [[org.clojure/clojure "1.9.0"]
-                 [ring-server "0.5.0"]
+  :dependencies [[cljsjs/google-diff-match-patch "20121119-2"]
+                 [cljsjs/lz-string "1.4.4-1"]
+                 [com.diogodualibe.lzstring4j/lzstring4j "2"]
+                 [com.novemberain/monger "3.1.0"
+                  :exclusions [com.google.guava/guava]]
+                 [compojure "1.6.1"]
+                 [hiccup "1.0.5"]
+                 [org.clojure/clojure "1.9.0"]
+                 [org.clojure/clojurescript "1.10.339"
+                  :scope "provided"]
+                 [overtone/at-at "1.2.0"]
                  [reagent "0.8.1"]
                  [reagent-utils "0.3.1"]
                  [ring "1.6.3"]
+                 [ring-server "0.5.0"]
                  [ring/ring-defaults "0.3.1"]
-                 [overtone/at-at "1.2.0"]
-                 [com.diogodualibe.lzstring4j/lzstring4j "2"]
-                 [compojure "1.6.1"]
-                 [hiccup "1.0.5"]
-                 [yogthos/config "1.1.1"]
-                 [org.clojure/clojurescript "1.10.339"
-                  :scope "provided"]
                  [secretary "1.2.3"]
-                 [com.novemberain/monger "3.1.0"]
+                 [spootnik/kinsky "0.1.22"]
                  [venantius/accountant "0.2.4"
                   :exclusions [org.clojure/tools.reader]]
-                 [cljsjs/google-diff-match-patch "20121119-2"]
-                 [cljsjs/lz-string "1.4.4-1"]]
+                 [yogthos/config "1.1.1"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-asset-minifier "0.2.7"
@@ -97,15 +99,15 @@
    :css-dirs ["resources/public/css"]
    :ring-handler iswyd.handler/app}
 
-  :profiles {:changes-srv-dev {:plugins [[lein-ring "0.12.1"]]
-                               :ring {:port 3450
-                                      :handler iswyd.services.changes.core/main
-                                      :open-browser? false}}
+  :profiles {:change-srv-dev {:plugins [[lein-ring "0.12.1"]]
+                              :ring {:port 3450
+                                     :handler iswyd.services.change.core/main
+                                     :open-browser? false}}
 
-             :cue-srv-dev {:plugins [[lein-ring "0.12.1"]]
-                           :ring {:port 3451
-                                  :handler iswyd.services.cue.core/main
-                                  :open-browser? false}}
+             :decomp-srv-dev {:plugins [[lein-ring "0.12.1"]]
+                              :ring {:port 3451
+                                     :handler iswyd.services.decomp.core/main
+                                     :open-browser? false}}
 
              :prod {:resource-paths ["config/prod"]}
 

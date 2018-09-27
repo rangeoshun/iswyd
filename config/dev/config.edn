@@ -1,3 +1,10 @@
 {:dev true
- :api-changes-url "http://0.0.0.0:3449/api/changes"
- :mongo-host "mongodb"}
+ :api-changes-url "http://0.0.0.0:3450/api/changes"
+ :mongo-host      "mongodb"
+
+ :kafka-host      "kafka:9092"
+
+ :raw-topic       "raw"
+ :decomp-topic    "decomp"
+ :decomp-group    "decomps"
+ }
