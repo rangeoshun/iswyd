@@ -15,33 +15,27 @@
                             (client/edn-serializer)))
 
 (defn pub-change [session-id data]
-  (client/send! p (:raw-topic env) :change {:session_id session-id
-                                            :data data}))
+  (client/send! p (:raw-topic env) :c {:session-id session-id
+                                         :data       data}))
 
-(defn handle-change [session-id data]
+(defn handle-ok [session-id data]
   (pub-change session-id data)
   {:status 200
-   :body (json/generate-string
-          {:errors []
-           :success true})})
+   :body   (json/generate-string {:success true})})
 
-(defn changes-handler [request]
+(defn change-handler [request]
   (let [data (slurp (:body request))
         session-id (:value ((:cookies request) "iswyd-session"))]
+
     (if (and session-id data)
-      (handle-change session-id data)
+      (handle-ok session-id data)
       {:status 400
-       :body (json/generate-string
-                {:errors [(if (empty? session-id) "Session ID is mandatory.")
-                          (if (empty? data) "Data in request body is mandatory.")]
-                 :success false})})))
+       :body   (json/generate-string {:success false})})))
 
-(defroutes service-routes
-  (POST "/" request (changes-handler request))
+(defroutes srv-routes
+  (POST "/" request (change-handler request))
+  (route/resources "/")
   (route/not-found {:status 405
-                    :body (json/generate-string
-                           {:errors  ["Method not allowed."]
-                            :success false})}))
+                    :body   (json/generate-string {:success false})}))
 
-(def main
-  (rm/wrap-cookies service-routes))
+(def main (rm/wrap-cookies srv-routes))

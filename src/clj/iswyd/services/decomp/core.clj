@@ -21,12 +21,11 @@
 (client/subscribe! c (:raw-topic env))
 (client/poll! c 100)
 
-(defn decomp-change [change]
-  (client/send! p (:decomp-topic env) :change
-                (log/info (str change)
-                (merge change {:changes (.decompress LZString (:data change))}))))
+(defn decomp-change [msg]
+  (client/send! p (:decomp-topic env) :c
+                (merge (:c msg) {:change (.decompress LZString (:data change))})))
 
-(defroutes service-routes
+(defroutes srv-routes
   (GET "/" request (fn [request] {:status 200 :body "OK"})))
 
-(def main service-routes)
+(def main srv-routes)

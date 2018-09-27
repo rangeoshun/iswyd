@@ -114,8 +114,8 @@
 (defn capture [] (.-outerHTML (sanitize (clone-root))))
 
 (def obs-conf #js {:attributes true
-                 :childList true
-                 :subtree true})
+                   :childList true
+                   :subtree true})
 
 (defn init-worker []
   (js/Worker. "/js/bootstrap_worker.js"))
@@ -137,7 +137,7 @@
     (reset! prev-html "")
     (js/fetch
      ;; (:api-changes-url env)
-     "http://127.0.0.1:3001/"
+     "http://127.0.0.1:3450/"
      #js {:method 'POST
           :body (.stringify js/JSON (compress changes))})))
 
