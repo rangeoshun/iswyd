@@ -129,7 +129,7 @@
 
 (def obs (js/MutationObserver. (fn [] (change-handler))))
 
-(defn compress [log] (lz.compress (js/JSON.stringify (clj->js log))))
+(defn compress [log] (lz.compressToBase64 (js/JSON.stringify (clj->js log))))
 
 (defn post-change []
   (let [changes @changelog]
