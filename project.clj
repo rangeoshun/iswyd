@@ -6,7 +6,7 @@
 
   :dependencies [[cljsjs/google-diff-match-patch "20121119-2"]
                  [cljsjs/lz-string "1.4.4-1"]
-                 [com.diogodualibe.lzstring4j/lzstring4j "2"]
+                 [com.github.wajda/lzstring4java "0.1"]
                  [com.novemberain/monger "3.1.0"
                   :exclusions [com.google.guava/guava]]
                  [compojure "1.6.1"]
