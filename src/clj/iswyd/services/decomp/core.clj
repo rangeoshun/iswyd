@@ -5,27 +5,33 @@
             [compojure.core :refer :all]
             [compojure.route :as route]
             [kinsky.client :as client]
-            [kinsky.async :as async]
             [ring.middleware.cookies :as rm])
-  (:import com.diogoduailibe.lzstring4j.LZString))
+  (:import rufus.lzstring4java.LZString))
 
-(defonce p (client/producer {:bootstrap.servers "kafka:9092"}
+(defonce p (client/producer {:bootstrap.servers (:kafka-host env)}
                             (client/keyword-serializer)
                             (client/edn-serializer)))
+
+(defn decomp-change [msg]
+  (log/info (json/generate-string msg))
+  (client/send! p (:decomp-topic env) :c {:session-id ""
+                                          :change     (. LZString decompressFromBase64 "foo")}))
 
 (defonce c (client/consumer {:bootstrap.servers (:kafka-host env)
                              :group.id          (:decomp-group env)}
                             (client/keyword-deserializer)
                             (client/edn-deserializer)))
 
-(defn decomp-change [msg]
-  (client/send! p (:decomp-topic env) :c
-                (merge (:c msg) {:change (.decompress LZString (get-in msg :c :change))})))
-
-(client/subscribe! c (:raw-topic env) decomp-change)
+(client/subscribe! c (:raw-topic env))
 (client/poll! c 100)
 
 (defroutes srv-routes
-  (GET "/" request (fn [request] {:status 200 :body "OK"})))
+  (POST "/" request (fn [request] {:status 200
+                                  :body   (json/generate-string
+                                           {:body   (. LZString decompressFromBase64 (slurp (:body request)))
+                                           :success true})}))
+  (route/resources "/")
+  (route/not-found {:status 405
+                    :body   (json/generate-string {:success false})}))
 
-(def main srv-routes)
+(def main (rm/wrap-cookies srv-routes))
