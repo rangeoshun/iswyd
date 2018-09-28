@@ -5,8 +5,8 @@
             [compojure.core :refer :all]
             [compojure.route :as route]
             [kinsky.client :as client]
-            [kinsky.async :as async]
-            [ring.middleware.cookies :as rm]))
+            [ring.middleware.cookies :as rm])
+  (:import rufus.lzstring4java.LZString))
 
 ;; TODO: Find out what is the idiomatic way to handle errors
 
@@ -14,14 +14,21 @@
                             (client/keyword-serializer)
                             (client/edn-serializer)))
 
+(defn decomp [data] (. LZString decompressFromBase64 data))
+
 (defn pub-change [session-id data]
   (client/send! p (:raw-topic env) :c {:session-id session-id
-                                         :data       data}))
-
-(defn handle-ok [session-id data]
-  (pub-change session-id data)
+                                       :data       (decomp data)})
   {:status 200
    :body   (json/generate-string {:success true})})
+
+(defn handle-ok [session-id data]
+  (try
+    (pub-change session-id data)
+    (catch Exception ex
+      (log/error (str ex))
+      {:status 500
+       :body   (json/generate-string {:success false})})))
 
 (defn change-handler [request]
   (let [data (slurp (:body request))
