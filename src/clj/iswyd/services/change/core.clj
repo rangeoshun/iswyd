@@ -17,15 +17,15 @@
 
 (defn decode [data]
   (json/read-str (. LZString decompressFromBase64 data)
-                 :value-fn (fn [key val] (if (string? val)
-                                          (ruc/percent-decode val)
-                                          val))
+                 :value-fn (fn [_ val] (if (string? val)
+                                        (ruc/percent-decode val)
+                                        val))
                  :key-fn keyword))
 
-(defn pub-change [session-id data]
+(defn pub-change [sid data]
   (go
-    (>! ch {:topic (:change-topic env) :key :change :value {:session-id session-id
-                                                            :data       data}}))
+    (>! ch {:topic (:change-topic env) :key :change :value {:sid  sid
+                                                            :data data}}))
   {:status 200
    :body   (json/write-str {:success true})})
 
@@ -45,10 +45,10 @@
 
 (defn change-handler [request]
   (let [data (slurp (:body request))
-        session-id (:value ((:cookies request) "iswyd-session"))]
+        sid  (:value ((:cookies request) "iswyd-session"))]
 
-    (if (and session-id data)
-      (handle-ok session-id data)
+    (if (and sid data)
+      (handle-ok sid data)
       {:status 400
        :body   (json/write-str {:success false})})))
 
