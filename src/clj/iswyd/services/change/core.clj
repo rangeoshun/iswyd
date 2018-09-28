@@ -1,10 +1,12 @@
 (ns iswyd.services.change.core
   (:require [cheshire.core :as json]
+            [clojure.core.async :as a :refer [go <! >!]]
             [clojure.tools.logging :as log]
             [config.core :refer [env]]
             [compojure.core :refer :all]
             [compojure.route :as route]
             [kinsky.client :as client]
+            [kinsky.async       :as async]
             [ring.middleware.cookies :as rm])
   (:import rufus.lzstring4java.LZString))
 
@@ -18,17 +20,23 @@
 
 (defn pub-change [session-id data]
   (client/send! p (:raw-topic env) :c {:session-id session-id
-                                       :data       (decomp data)})
+                                       :data       data})
   {:status 200
    :body   (json/generate-string {:success true})})
 
+(defn handle-srv-fail []
+  {:status 500
+   :body   (json/generate-string {:success false})})
+
 (defn handle-ok [session-id data]
   (try
-    (pub-change session-id data)
+    (let [data (decomp data)]
+      (if-not (nil? data)
+        (pub-change session-id data)
+        (handle-srv-fail)))
     (catch Exception ex
       (log/error (str ex))
-      {:status 500
-       :body   (json/generate-string {:success false})})))
+      (handle-srv-fail))))
 
 (defn change-handler [request]
   (let [data (slurp (:body request))
