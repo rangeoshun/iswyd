@@ -38,7 +38,6 @@
 
 (a/go-loop []
   (when-let [msg (<! e-ch)]
-    (println (pr-str msg))
     (if (:value msg)
       (pub-decode (:sid (:value msg)) (:data (:value msg))))
     (recur)))

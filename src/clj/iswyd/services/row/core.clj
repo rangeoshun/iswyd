@@ -40,7 +40,6 @@
                                  $sort {:tm 1}}}})))
 
 (defn handle [msg]
-  (log/info msg)
   (let [val  (:value msg)
         sid  (:sid val)
         data (:data val)]
