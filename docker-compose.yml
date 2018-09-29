@@ -21,7 +21,7 @@ services:
     restart: always
     ports:
       - 3450:3450
-    hostname: changes_srv
+    hostname: change_srv
     volumes:
       - .:/app
       - ../../.m2:/root/.m2
@@ -35,12 +35,26 @@ services:
     restart: always
     ports:
       - 3451:3451
-    hostname: cue_srv
+    hostname: decode_srv
     volumes:
       - .:/app
       - ../../.m2:/root/.m2
     working_dir: "/app"
     entrypoint: lein with-profile +decode-srv-dev trampoline ring server-headless
+    networks:
+      - dev_net
+
+  row_srv:
+    image: clojure:lein-2.8.1
+    restart: always
+    ports:
+      - 3452:3452
+    hostname: row_srv
+    volumes:
+      - .:/app
+      - ../../.m2:/root/.m2
+    working_dir: "/app"
+    entrypoint: lein with-profile +row-srv-dev trampoline ring server-headless
     networks:
       - dev_net
 

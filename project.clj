@@ -106,16 +106,22 @@
   :profiles {:change-srv-dev {:plugins [[lein-ring "0.12.1"]]
                               :source-paths ["src/clj/iswyd/services/change" "src/cljc"]
                               :ring {:port 3450
-                                     :main iswyd.services.change.core/main
+                                     :main iswyd.services.change.core/-main
                                      :handler iswyd.services.change.core/main
                                      :open-browser? false}}
 
              :decode-srv-dev {:plugins [[lein-ring "0.12.1"]]
                               :source-paths ["src/clj/iswyd/services/decode" "src/cljc"]
                               :ring {:port 3451
-                                     :main iswyd.services.change.core/main
+                                     :main iswyd.services.change.core/-main
                                      :handler iswyd.services.decode.core/main
                                      :open-browser? false}}
+
+             :row-srv-dev {:plugins [[lein-ring "0.12.1"]]
+                           :source-paths ["src/clj/iswyd/services/decode" "src/cljc"]
+                           :ring {:port 3452
+                                  :main iswyd.services.row.core/-main
+                                  :handler iswyd.services.row.core/main}}
 
              :prod {:resource-paths ["config/prod"]}
 
