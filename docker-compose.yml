@@ -15,6 +15,7 @@ services:
     entrypoint: lein figwheel app lib worker
     networks:
       - dev_net
+
   change_srv:
     image: clojure:lein-2.8.1
     restart: always
@@ -28,6 +29,7 @@ services:
     entrypoint: lein with-profile +change-srv-dev trampoline ring server-headless
     networks:
       - dev_net
+
   decode_srv:
     image: clojure:lein-2.8.1
     restart: always
@@ -41,6 +43,7 @@ services:
     entrypoint: lein with-profile +decode-srv-dev trampoline ring server-headless
     networks:
       - dev_net
+
   kafka:
     image: spotify/kafka
     restart: always
@@ -55,6 +58,7 @@ services:
       AUTO_CREATE_TOPICS: 'true'
     networks:
       - dev_net
+
   mongodb:
     image: mongo:3.4
     restart: always
@@ -66,6 +70,16 @@ services:
     command: "mongod"
     networks:
       - dev_net
+
+  cadvisor:
+    image: google/cadvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    ports:
+      - 8080:8080
 
 networks:
   dev_net:
