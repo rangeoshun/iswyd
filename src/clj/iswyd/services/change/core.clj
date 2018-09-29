@@ -7,20 +7,12 @@
             [compojure.route :as route]
             [kinsky.client :as client]
             [kinsky.async :as async]
-            [ring.middleware.cookies :as rm]
-            [ring.util.codec :as ruc])
+            [ring.middleware.cookies :as rm])
   (:import rufus.lzstring4java.LZString))
 
 ;; TODO: Find out what is the idiomatic way to handle errors
 
 (defonce ch (async/producer {:bootstrap.servers (:kafka-host env)} :keyword :edn))
-
-(defn decode [data]
-  (json/read-str (. LZString decompressFromBase64 data)
-                 :value-fn (fn [_ val] (if (string? val)
-                                        (ruc/percent-decode val)
-                                        val))
-                 :key-fn keyword))
 
 (defn pub-change [sid data]
   (go
@@ -34,14 +26,9 @@
    :body   (json/write-str {:success false})})
 
 (defn handle-ok [session-id data]
-  (try
-    (let [data (decode data)]
-      (if-not (nil? data)
-        (pub-change session-id data)
-        (handle-srv-fail)))
-    (catch Exception ex
-      (log/error (str ex))
-      (handle-srv-fail))))
+  (if-not (empty? data)
+    (pub-change session-id data)
+    (handle-srv-fail)))
 
 (defn change-handler [request]
   (let [data (slurp (:body request))
@@ -53,6 +40,7 @@
        :body   (json/write-str {:success false})})))
 
 (defroutes srv-routes
+  (GET "/" request {:status 200})
   (POST "/" request (change-handler request))
   (route/resources "/")
   (route/not-found {:status 405

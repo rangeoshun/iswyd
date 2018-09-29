@@ -15,6 +15,8 @@
                  [org.clojure/clojurescript "1.10.339"
                   :scope "provided"]
                  [org.clojure/data.json "0.2.6"]
+                 [org.slf4j/slf4j-api "1.7.5"]
+                 [org.slf4j/slf4j-simple "1.6.4"]
                  [overtone/at-at "1.2.0"]
                  [reagent "0.8.1"]
                  [reagent-utils "0.3.1"]
@@ -106,10 +108,11 @@
                                      :handler iswyd.services.change.core/main
                                      :open-browser? false}}
 
-             ;; :decomp-srv-dev {:plugins [[lein-ring "0.12.1"]]
-             ;;                  :ring {:port 3451
-             ;;                         :handler iswyd.services.decomp.core/main
-             ;;                         :open-browser? false}}
+             :decode-srv-dev {:plugins [[lein-ring "0.12.1"]]
+                              :source-paths ["src/clj/iswyd/services/decode" "src/cljc"]
+                              :ring {:port 3451
+                                     :handler iswyd.services.decode.core/main
+                                     :open-browser? false}}
 
              :prod {:resource-paths ["config/prod"]}
 

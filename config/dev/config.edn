@@ -3,4 +3,6 @@
  :mongo-host      "mongodb"
  :kafka-host      "kafka:9092"
  :change-topic    "change"
+ :decode-topic    "decode"
+ :decode-group    "decoders"
  }

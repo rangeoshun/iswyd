@@ -25,22 +25,22 @@ services:
       - .:/app
       - ../../.m2:/root/.m2
     working_dir: "/app"
-    entrypoint: lein with-profile +change-srv-dev ring server-headless
+    entrypoint: lein with-profile +change-srv-dev trampoline ring server-headless
     networks:
       - dev_net
-  # decomp_srv:
-  #   image: clojure:lein-2.8.1
-  #   restart: always
-  #   ports:
-  #     - 3451:3451
-  #   hostname: cue_srv
-  #   volumes:
-  #     - .:/app
-  #     - ../../.m2:/root/.m2
-  #   working_dir: "/app"
-  #   entrypoint: lein with-profile +decomp-srv-dev ring server-headless
-  #   networks:
-  #     - dev_net
+  decode_srv:
+    image: clojure:lein-2.8.1
+    restart: always
+    ports:
+      - 3451:3451
+    hostname: cue_srv
+    volumes:
+      - .:/app
+      - ../../.m2:/root/.m2
+    working_dir: "/app"
+    entrypoint: lein with-profile +decode-srv-dev trampoline ring server-headless
+    networks:
+      - dev_net
   kafka:
     image: spotify/kafka
     restart: always
