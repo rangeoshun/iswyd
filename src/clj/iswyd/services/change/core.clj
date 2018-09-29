@@ -7,17 +7,19 @@
             [compojure.route :as route]
             [kinsky.client :as client]
             [kinsky.async :as async]
-            [ring.middleware.cookies :as rm])
-  (:import rufus.lzstring4java.LZString))
+            [ring.middleware.cookies :as rm]))
 
 ;; TODO: Find out what is the idiomatic way to handle errors
 
-(defonce ch (async/producer {:bootstrap.servers (:kafka-host env)} :keyword :edn))
+(defonce ch (async/producer {:bootstrap.servers (:kafka-host env)}
+                            :keyword :edn))
 
 (defn pub-change [sid data]
   (go
-    (>! ch {:topic (:change-topic env) :key :change :value {:sid  sid
-                                                            :data data}}))
+    (>! ch {:topic (:change-topic env)
+            :key :change
+            :value {:sid  sid
+                    :data data}}))
   {:status 200
    :body   (json/write-str {:success true})})
 

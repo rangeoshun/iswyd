@@ -11,31 +11,40 @@
             [ring.util.codec :as ruc])
   (:import rufus.lzstring4java.LZString))
 
-(defonce p (client/producer {:bootstrap.servers (:kafka-host env)}
-                            (client/keyword-serializer)
-                            (client/edn-serializer)))
+(defonce p-ch (async/producer {:bootstrap.servers (:kafka-host env)}
+                              :keyword :edn))
+
+(defonce c-vec (async/consumer {:bootstrap.servers (:kafka-host env)
+                                :group.id          (:decode-group env)}
+                               (client/keyword-deserializer)
+                               (client/edn-deserializer)))
+
+(defonce e-ch (first c-vec))
+(defonce c-ch (second c-vec))
+
 (defn decode [data]
   (json/read-str (. LZString decompressFromBase64 data)
                  :value-fn (fn [_ val] (if (string? val)
-                                         (ruc/percent-decode val)
-                                         val))
+                                        (ruc/percent-decode val)
+                                        val))
                  :key-fn keyword))
 
 (defn pub-decode [sid data]
-  (go
-    (>! ch {:topic (:decode-topic env) :key :change :value {:sid  sid
-                                                            :data data}})))
-
-(defonce [ch _] (async/consumer {:bootstrap.servers (:kafka-host env)
-                                 :group.id          (:decode-group env)}
-                                (client/string-deserializer)
-                                (client/string-deserializer)))
+    (go
+      (>! p-ch {:topic (:decode-topic env)
+                :key   :decode
+                :value {:sid  sid
+                        :data (decode data)}})))
 
 (a/go-loop []
-  (when-let [msg (a/<! ch)]
+  (when-let [msg (<! e-ch)]
     (println (pr-str msg))
-    (pub-decode (:sid msg) (:data msg))
+    (if (:value msg)
+      (pub-decode (:sid (:value msg)) (:data (:value msg))))
     (recur)))
+
+(a/put! c-ch {:op :subscribe :topic (:change-topic env)})
+(a/put! c-ch {:op :commit})
 
 (defroutes srv-routes
   (GET "/" request (json/write-str {:status 200}))
