@@ -11,6 +11,8 @@
 
 ;; (def last-tm (atom 0))
 
+(def sid (atom ""))
+(def ready (atom false))
 (def prev-html (atom ""))
 (def prev-pos (atom {}))
 (def curr-pos (atom {}))
@@ -20,7 +22,8 @@
 
 (def changelog (atom []))
 
-(defn now [] (. (js/Date.) getTime))
+(defn now []
+  (. (js/Date.) getTime))
 
 ;; (defn csrf-token []
 ;;   (.getAttribute (.querySelector js/document "meta[csrf-token]") "csrf-token"))
@@ -31,23 +34,24 @@
 ;;     (reset! last-tm t2)
 ;;     (- t2 t1)))
 
-(defn log [ev]
+(defn log! [ev]
   (swap! changelog (fn [] (conj @changelog ev)))
   ;;(js/console.log (clj->js ev))
   )
 
-(defn log-change [patch]
+(defn log-change! [patch key]
   (if-not (empty? patch)
-    (log {:tp :change
-          :p patch
-          :tm (now)})))
+    (log! {:tp :change
+           :ky key
+           :p patch
+           :tm (now)})))
 
-(defn log-mouse [ev]
-  (log ev)
+(defn log-mouse! [ev]
+  (log! ev)
   (reset! prev-pos ev))
 
-(defn log-scroll [ev]
-  (log ev)
+(defn log-scroll! [ev]
+  (log! ev)
   (reset! prev-scroll ev))
 
 (defn doc-root [] (aget js/document.children 0))
@@ -71,7 +75,7 @@
 ;;     (aset style "innerHTML" clear-css)
 ;;     (. (aget (. root getElementsByTagName "head") 0) appendChild style)))
 
-(defn del-nodes [nodes]
+(defn del-nodes! [nodes]
   (loop [nodes nodes]
     (let [node (first nodes)]
       (if node
@@ -79,7 +83,7 @@
       (if-not (empty? nodes)
         (recur nodes)))))
 
-(defn abs-src [nodes]
+(defn abs-src! [nodes]
   (loop [nodes nodes]
     (let [node (first nodes)
           others (rest nodes)]
@@ -87,7 +91,7 @@
       (if-not (empty? others)
         (recur others)))))
 
-(defn abs-href [nodes]
+(defn abs-href! [nodes]
   (loop [nodes nodes]
     (let [node (first nodes)
           others (rest nodes)]
@@ -95,7 +99,7 @@
       (if-not (empty? others)
         (recur others)))))
 
-(defn cp-values [nodes]
+(defn cp-values! [nodes]
   (loop [nodes nodes]
     (let [node (first nodes)
           others (rest nodes)]
@@ -103,43 +107,44 @@
       (if-not (empty? others)
         (recur others)))))
 
-(defn sanitize [root]
+(defn sanitize! [root]
   ;; (add-clear root)
-  (del-nodes (scripts root))
-  (abs-src (imgs root))
-  (abs-href (links root))
-  (cp-values (inputs root))
+  (del-nodes! (scripts root))
+  (abs-src! (imgs root))
+  (abs-href! (links root))
+  (cp-values! (inputs root))
   root)
 
-(defn capture [] (.-outerHTML (sanitize (clone-root))))
+(defn capture []
+  (.-outerHTML (sanitize! (clone-root))))
 
 (def obs-conf #js {:attributes true
                    :childList true
                    :subtree true})
 
-(defn init-worker []
+(defn init-worker! []
   (js/Worker. "/js/bootstrap_worker.js"))
 
-(defonce worker (init-worker))
+(defonce worker (init-worker!))
 
-(defn change-handler []
+(defn change-handler! []
   (let [html (capture)]
     (.postMessage worker (clj->js [@prev-html, html]))
     (reset! prev-html html)))
 
-(def obs (js/MutationObserver. (fn [] (change-handler))))
+(def obs (js/MutationObserver. (fn [] (change-handler!))))
 
 (defn compress [log] (lz.compressToBase64 (js/JSON.stringify (clj->js log))))
 
-(defn post-change []
+(defn post-change! []
   (let [changes @changelog]
     (reset! changelog [])
     (reset! prev-html "")
     (js/fetch
-     ;; (:api-changes-url env)
-     "http://127.0.0.1:3450/"
+     "http://0.0.0.0:3450/"
      #js {:method 'POST
-          :body (.stringify js/JSON (compress changes))})))
+          :body (.stringify js/JSON (clj->js {:sid (clj->js @sid)
+                                              :data (compress changes)}))})))
 
 (defn keys-num [ev]
     (+ (if (aget ev "ctrlKey") 1 0)
@@ -154,39 +159,39 @@
                            :y (aget ev "clientY")
                            :tm (now)})
 
-(defn pos-handler [type, ev]
+(defn pos-handler! [type, ev]
   (reset! curr-pos (mouse-ev type ev)))
 
-(defn pos-change [prev curr]
+(defn pos-change  [prev curr]
     (or (not= (:x prev -1) (:x curr -1))
         (not= (:y prev -1) (:y curr -1))))
 
-(defn pos-cycle []
+(defn pos-cycle! []
   (js/setInterval
      (fn []
        (let [prev @prev-pos
              curr @curr-pos]
-         (if (pos-change prev curr) (log-mouse curr))))
+         (if (pos-change prev curr) (log-mouse! curr))))
      300))
 
 
-(defn listen-change [nodes]
+(defn listen-change! [nodes]
   (loop [nodes nodes]
     (let [node (first nodes)
           others (rest nodes)]
-      (if node (. node addEventListener "keydown" change-handler))
+      (if node (. node addEventListener "keydown" change-handler!))
       (if-not (empty? others)
         (recur others)))))
 
-(defn listen-move []
-  (js/addEventListener "mousemove" (fn [ev] (pos-handler :move ev)))
-  (pos-cycle))
+(defn listen-move! []
+  (js/addEventListener "mousemove" (fn [ev] (pos-handler! :move ev)))
+  (pos-cycle!))
 
-(defn listen-down []
-  (js/addEventListener "mousedown" (fn [ev] (log-mouse (mouse-ev :down ev)))))
+(defn listen-down! []
+  (js/addEventListener "mousedown" (fn [ev] (log-mouse! (mouse-ev :down ev)))))
 
-(defn listen-up []
-  (js/addEventListener "mouseup" (fn [ev] (log-mouse (mouse-ev :up ev)))))
+(defn listen-up! []
+  (js/addEventListener "mouseup" (fn [ev] (log-mouse! (mouse-ev :up ev)))))
 
 (defn mark? [node] (.getAttribute node "data-iswyd-mark"))
 
@@ -211,44 +216,56 @@
      :y (.-scrollY js/window)
      :tm (now)}))
 
-(defn scroll-change [prev curr] (or ;; (not= (:m prev "") (:m curr ""))
-                                    (not= (:x prev -1) (:x curr -1))
-                                    (not= (:y prev -1) (:y curr -1))))
+(defn scroll-change [prev curr]
+  (or ;; (not= (:m prev "") (:m curr ""))
+   (not= (:x prev -1) (:x curr -1))
+   (not= (:y prev -1) (:y curr -1))))
 
-(defn scroll-handler [type, ev]
+(defn scroll-handler! [type, ev]
   (reset! curr-scroll (scroll-ev type ev)))
 
-(defn scroll-cycle []
+(defn scroll-cycle! []
   (js/setInterval
    (fn []
      (let [prev @prev-scroll
            curr @curr-scroll]
-       (if (scroll-change prev curr) (log-scroll curr))))
+       (if (scroll-change prev curr) (log-scroll! curr))))
    100))
 
-(defn listen-scroll []
-  (js/addEventListener "scroll" (fn [ev] (scroll-handler :scroll ev)))
-  (scroll-cycle))
+(defn listen-scroll! []
+  (js/addEventListener "scroll" (fn [ev] (scroll-handler! :scroll ev)))
+  (scroll-cycle!))
 
-(defn init-changelog []
-  (let [root (doc-root)]
-    (change-handler)
-    (listen-move)
-    (listen-down)
-    (listen-up)
-    (listen-scroll)
-    (listen-change (inputs root))
-    (. obs observe root obs-conf))
-  (set! (.-onmessage worker) (fn [msg]
-                               (log-change (.-data msg)))))
+(defn worker-cb [msg]
+  (let [data  (.-data msg)
+        patch (aget data 0)
+        key   (aget data 1)]
+  (log-change! patch key)))
 
-(defn main []
-  (init-changelog))
+(defn init-changelog! []
+  (if-not @ready
+    (do
+      (reset! ready true)
+      (reset! sid (random-uuid))
+      (let [root (doc-root)]
+        (change-handler!)
+        (listen-move!)
+        (listen-down!)
+        (listen-up!)
+        (listen-scroll!)
+        (listen-change! (inputs root))
+        (. obs observe root obs-conf))
+      (set! (.-onmessage worker) (fn [msg] (worker-cb msg)))
+      true)
+    false))
 
-(def iswyd-ext #js {:init (fn [] (init-changelog))
+(defn -main []
+  (init-changelog!))
+
+(def iswyd-ext #js {:init (fn [] (init-changelog!))
                     :capture (fn [] (capture))
                     :changelog (fn [] (clj->js @changelog))
                     :compressed (fn [] (compress @changelog))
-                    :postchange (fn [] (post-change))})
+                    :postchange (fn [] (post-change!))})
 
 (aset js/window "iSwyd" iswyd-ext)

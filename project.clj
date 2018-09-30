@@ -136,6 +136,7 @@
                                   [cider/piggieback "0.3.8"]
                                   [pjstadig/humane-test-output "0.8.3"]]
 
+                   :resource-paths ["config/dev"]
                    :source-paths ["env/dev/clj"]
                    :plugins [[lein-figwheel "0.5.16"]]
 

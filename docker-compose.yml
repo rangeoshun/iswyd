@@ -1,4 +1,4 @@
-version: "3.7"
+version: "3"
 services:
   app:
     image: clojure:lein-2.8.1
@@ -87,6 +87,7 @@ services:
 
   cadvisor:
     image: google/cadvisor
+    restart: always
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:rw

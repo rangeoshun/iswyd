@@ -33,13 +33,18 @@
     (handle-srv-fail)))
 
 (defn change-handler [request]
-  (let [data (slurp (:body request))
-        sid  (:value ((:cookies request) "iswyd-session"))]
+  (let [body (json/read-str (slurp (:body request)) :key-fn keyword)
+        sid  (:sid body)
+        data (:data body)]
 
     (if (and sid data)
       (handle-ok sid data)
       {:status 400
        :body   (json/write-str {:success false})})))
+
+(defn wrap-cors [handler]
+  (fn [request]
+    (assoc-in (handler request) [:headers "Access-Control-Allow-Origin"] "*")))
 
 (defroutes srv-routes
   (GET "/" request {:status 200})
@@ -48,4 +53,5 @@
   (route/not-found {:status 405
                     :body   (json/write-str {:success false})}))
 
-(def main (rm/wrap-cookies srv-routes))
+(def main (wrap-cors
+           (rm/wrap-cookies srv-routes)))
