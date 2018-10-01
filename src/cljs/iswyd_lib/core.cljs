@@ -13,9 +13,14 @@
 
 (def sid (atom ""))
 (def ready (atom false))
+
 (def prev-html (atom ""))
+
 (def prev-pos (atom {}))
 (def curr-pos (atom {}))
+
+(def prev-resize (atom {}))
+(def curr-resize (atom {}))
 
 (def prev-scroll (atom {}))
 (def curr-scroll (atom {}))
@@ -53,6 +58,10 @@
 (defn log-scroll! [ev]
   (log! ev)
   (reset! prev-scroll ev))
+
+(defn log-resize! [ev]
+  (log! ev)
+  (reset! prev-resize ev))
 
 (defn doc-root [] (aget js/document.children 0))
 
@@ -154,10 +163,10 @@
        (if (aget ev "metaKey") 8 0)))
 
 (defn mouse-ev [type, ev] {:tp type
-                           :bs (aget ev "buttons")
+                           :bs (.-buttons ev)
                            :ks (keys-num ev)
-                           :x (aget ev "clientX")
-                           :y (aget ev "clientY")
+                           :x (.-clientX ev)
+                           :y (.-clientY ev)
                            :tm (now)})
 
 (defn pos-handler! [type, ev]
@@ -236,6 +245,32 @@
   (js/addEventListener "scroll" (fn [ev] (scroll-handler! :scroll ev)))
   (scroll-cycle!))
 
+(defn resize-ev [] {:tp :resize
+                    :w (aget js/window "innerWidth")
+                    :h (aget js/window "innerHeight")
+                    :tm (now)})
+
+(defn resize-change [prev curr]
+  (or
+   (not= (:w prev -1) (:w curr -1))
+   (not= (:h prev -1) (:h curr -1))))
+
+(defn resize-handler! []
+  (reset! curr-resize (resize-ev)))
+
+(defn resize-cycle! []
+  (resize-handler!)
+  (js/setInterval
+   (fn []
+     (let [prev @prev-resize
+           curr @curr-resize]
+       (if (resize-change prev curr) (log-resize! curr))))
+   100))
+
+(defn listen-resize! []
+  (js/addEventListener "resize" (fn [_] (resize-handler!)))
+  (resize-cycle!))
+
 (defn worker-cb [msg]
   (let [data  (.-data msg)
         patch (aget data 0)
@@ -253,6 +288,7 @@
         (listen-down!)
         (listen-up!)
         (listen-scroll!)
+        (listen-resize!)
         (listen-change! (inputs root))
         (. obs observe root obs-conf))
       (set! (.-onmessage worker) (fn [msg] (worker-cb msg)))
