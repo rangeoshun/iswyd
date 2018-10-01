@@ -7,6 +7,7 @@ services:
     # tty: true
     volumes:
       - .:/app
+      - /app/target
       - ../../.m2:/root/.m2
     working_dir: "/app"
     ports:
@@ -24,6 +25,7 @@ services:
     hostname: change_srv
     volumes:
       - .:/app
+      - /app/target
       - ../../.m2:/root/.m2
     working_dir: "/app"
     entrypoint: lein with-profile +change-srv-dev trampoline ring server-headless
@@ -38,6 +40,7 @@ services:
     hostname: decode_srv
     volumes:
       - .:/app
+      - /app/target
       - ../../.m2:/root/.m2
     working_dir: "/app"
     entrypoint: lein with-profile +decode-srv-dev trampoline ring server-headless
@@ -52,6 +55,7 @@ services:
     hostname: row_srv
     volumes:
       - .:/app
+      - /app/target
       - ../../.m2:/root/.m2
     working_dir: "/app"
     entrypoint: lein with-profile +row-srv-dev trampoline ring server-headless
@@ -96,5 +100,7 @@ services:
     ports:
       - 8080:8080
 
+volumes:
+  target:
 networks:
   dev_net:
