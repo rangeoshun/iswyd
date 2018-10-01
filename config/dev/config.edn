@@ -1,10 +1,9 @@
 {:dev true
  :api-changes-url "http://0.0.0.0:3450/api/changes"
- :mongo-host      "mongodb"
+ :mongo-host      "mongo"
  :mongo-db        "iswyd"
  :mongo-session   "sessions"
  :kafka-host      "kafka:9092"
  :change-topic    "change"
  :decode-topic    "decode"
- :decode-group    "decoders"
  }

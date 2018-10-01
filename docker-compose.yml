@@ -77,12 +77,11 @@ services:
     networks:
       - dev_net
 
-  mongodb:
+  mongo:
     image: mongo:3.4
     restart: always
     ports:
       - 27017:27017
-    hostname: mongodb
     volumes:
       - ./data/db:/data
     command: "mongod"
