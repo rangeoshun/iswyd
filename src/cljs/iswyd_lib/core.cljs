@@ -39,6 +39,21 @@
 ;;     (reset! last-tm t2)
 ;;     (- t2 t1)))
 
+(defn compress [log] (lz.compressToBase64 (js/JSON.stringify (clj->js log))))
+
+(defn post-change! []
+  (let [changes @changelog]
+    (if-not (empty? changes)
+      (do
+        (reset! changelog [])
+        ;;(reset! prev-html "")
+        (js/fetch
+         "http://0.0.0.0:3450/"
+         #js {:method 'POST
+              :body (.stringify js/JSON #js {:sid (str @sid)
+                                             :cid (str (random-uuid))
+                                             :data (compress changes)})})))))
+
 (defn log! [ev]
   (swap! changelog (fn [] (conj @changelog ev)))
   ;;(js/console.log (clj->js ev))
@@ -53,6 +68,8 @@
 
 (defn log-mouse! [ev]
   (log! ev)
+  (if (= ev :click)
+    (post-change!))
   (reset! prev-pos ev))
 
 (defn log-scroll! [ev]
@@ -142,19 +159,6 @@
     (reset! prev-html html)))
 
 (def obs (js/MutationObserver. (fn [] (change-handler!))))
-
-(defn compress [log] (lz.compressToBase64 (js/JSON.stringify (clj->js log))))
-
-(defn post-change! []
-  (let [changes @changelog]
-    (reset! changelog [])
-    (reset! prev-html "")
-    (js/fetch
-     "http://0.0.0.0:3450/"
-     #js {:method 'POST
-          :body (.stringify js/JSON #js {:sid (str @sid)
-                                         :cid (str (random-uuid))
-                                         :data (compress changes)})})))
 
 (defn keys-num [ev]
     (+ (if (aget ev "ctrlKey") 1 0)
@@ -291,6 +295,7 @@
         (listen-resize!)
         (listen-change! (inputs root))
         (. obs observe root obs-conf))
+      (js/setInterval #(post-change!) 2000)
       (set! (.-onmessage worker) (fn [msg] (worker-cb msg)))
       true)
     false))
@@ -299,9 +304,7 @@
   (init-changelog!))
 
 (def iswyd-ext #js {:init (fn [] (init-changelog!))
-                    :capture (fn [] (capture))
                     :changelog (fn [] (clj->js @changelog))
-                    :compressed (fn [] (compress @changelog))
                     :postchange (fn [] (post-change!))})
 
 (aset js/window "iSwyd" iswyd-ext)
