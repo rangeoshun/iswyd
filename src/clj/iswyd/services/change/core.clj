@@ -14,11 +14,12 @@
 (defonce ch (async/producer {:bootstrap.servers (:kafka-host env)}
                             :keyword :edn))
 
-(defn pub-change [sid data]
+(defn pub-change [sid cid data]
   (go
     (>! ch {:topic (:change-topic env)
             :key :change
             :value {:sid  sid
+                    :cid  cid
                     :data data}}))
   {:status 200
    :body   (json/write-str {:success true})})
@@ -27,18 +28,19 @@
   {:status 500
    :body   (json/write-str {:success false})})
 
-(defn handle-ok [session-id data]
+(defn handle-ok [sid cid data]
   (if-not (empty? data)
-    (pub-change session-id data)
+    (pub-change sid cid data)
     (handle-srv-fail)))
 
 (defn change-handler [request]
   (let [body (json/read-str (slurp (:body request)) :key-fn keyword)
         sid  (:sid body)
+        cid  (:cid body)
         data (:data body)]
 
-    (if (and sid data)
-      (handle-ok sid data)
+    (if (and sid cid data)
+      (handle-ok sid cid data)
       {:status 400
        :body   (json/write-str {:success false})})))
 

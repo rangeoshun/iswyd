@@ -140,8 +140,6 @@
                    :source-paths ["env/dev/clj"]
                    :plugins [[lein-figwheel "0.5.16"]]
 
-                   :resource-paths ["config/dev"]
-
                    :injections [(require 'pjstadig.humane-test-output)
                                 (pjstadig.humane-test-output/activate!)]
 

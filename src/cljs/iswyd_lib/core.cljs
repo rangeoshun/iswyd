@@ -143,8 +143,9 @@
     (js/fetch
      "http://0.0.0.0:3450/"
      #js {:method 'POST
-          :body (.stringify js/JSON (clj->js {:sid (clj->js @sid)
-                                              :data (compress changes)}))})))
+          :body (.stringify js/JSON #js {:sid (str @sid)
+                                         :cid (str (random-uuid))
+                                         :data (compress changes)})})))
 
 (defn keys-num [ev]
     (+ (if (aget ev "ctrlKey") 1 0)
@@ -173,7 +174,6 @@
              curr @curr-pos]
          (if (pos-change prev curr) (log-mouse! curr))))
      300))
-
 
 (defn listen-change! [nodes]
   (loop [nodes nodes]

@@ -19,7 +19,7 @@
 (defonce coll (:mongo-session env))
 
 (defonce c-vec (async/consumer {:bootstrap.servers (:kafka-host env)
-                                :group.id          (:decode-group env)}
+                                :group.id          (mu/random-uuid)}
                                (client/keyword-deserializer)
                                (client/edn-deserializer)))
 
@@ -28,25 +28,27 @@
 
 (defn exists? [sid] (mc/any? db coll {:sid sid}))
 
-(defn in-doc [sid data]
+(defn in-doc [sid cid data]
   (mc/insert db coll {:_id (mu/random-uuid)
+                      :cids [cid]
                       :sid sid
-                      :changes data}))
+                      :data data}))
 
-(defn up-doc [sid data]
-  (if-not (empty? data)
-    (mc/update db coll {:sid sid}
-               {$push {:changes {$each data
-                                 $sort {:tm 1}}}})))
+(defn up-doc [sid cid data]
+  (mc/update db coll {:sid sid :cids {$ne cid}}
+             {$push {:cids cid
+                     :data {$each data
+                            $sort {:tm 1}}}}))
 
 (defn handle [msg]
   (let [val  (:value msg)
         sid  (:sid val)
+        cid  (:cid val)
         data (:data val)]
-    (if (and sid data)
+    (if (and sid cid (not (empty? data)))
       (if (exists? sid)
-        (up-doc sid data)
-        (in-doc sid data)))))
+        (up-doc sid cid data)
+        (in-doc sid cid data)))))
 
 (a/go-loop []
   (when-let [msg (<! e-ch)]
