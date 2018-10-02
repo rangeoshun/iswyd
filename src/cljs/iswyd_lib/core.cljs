@@ -27,6 +27,8 @@
 
 (def changelog (atom []))
 
+(def excludes (atom []))
+
 (defn now []
   (. (js/Date.) getTime))
 
@@ -133,12 +135,44 @@
       (if-not (empty? others)
         (recur others)))))
 
+(defn create-mask [node]
+  (let [mask  (. js/document createElement "div")
+        comp  (.getComputedStyle js/window node)
+        style (merge comp {:width      (.-offsetWidth node)
+                           :height     (.-offsetHeight node)
+                           :display    "inline-block"
+                           :background "#333"})]
+    (.forEach
+     (.keys js/Object style) (fn [key]
+                            (aset (.-style mask) key (aget style key))))))
+
+(defn mask-node! [node]
+  (.replaceWith node (create-mask node)))
+
+(defn mask-nodes! [nodes]
+  (loop [nodes nodes]
+    (let [node (first nodes)
+          others (rest nodes)]
+      (if node (mask-node! node))
+      (if-not (empty? others)
+        (recur others)))))
+
+(defn mask! [root]
+  (loop [ex @excludes]
+    (let [sel    (first ex)
+          nodes  (js->clj (flatten (js/Array. (. root querySelectorAll sel))))
+          others (rest ex)]
+      (if (any? nodes) (mask-nodes! nodes))
+      (if-not (empty? others)
+        (recur others)))))
+
 (defn sanitize! [root]
   ;; (add-clear root)
   (del-nodes! (scripts root))
   (abs-src! (imgs root))
   (abs-href! (links root))
   (cp-values! (inputs root))
+  (mask! root)
   root)
 
 (defn capture []
@@ -281,7 +315,12 @@
         key   (aget data 1)]
   (log-change! patch key)))
 
-(defn init-changelog! []
+(defn init-posting! []
+  (js/setInterval #(post-change!) 10000)
+  (js/addEventListener "blur" #(post-change!)))
+
+(defn init-changelog! [opts & {:keys [:exclude] :or {:exclude []}}]
+  (reset! excludes exclude)
   (if-not @ready
     (do
       (reset! ready true)
@@ -295,16 +334,14 @@
         (listen-resize!)
         (listen-change! (inputs root))
         (. obs observe root obs-conf))
-      (js/setInterval #(post-change!) 2000)
+      (init-posting!)
       (set! (.-onmessage worker) (fn [msg] (worker-cb msg)))
       true)
     false))
 
-(defn -main []
-  (init-changelog!))
-
-(def iswyd-ext #js {:init (fn [] (init-changelog!))
-                    :changelog (fn [] (clj->js @changelog))
+(def iswyd-ext #js {:init       (fn [opts] (init-changelog! (js->clj opts)))
+                    :capture    (fn [] (.-outerHTML (sanitize! (clone-root))))
+                    :changelog  (fn [] (clj->js @changelog))
                     :postchange (fn [] (post-change!))})
 
 (aset js/window "iSwyd" iswyd-ext)
