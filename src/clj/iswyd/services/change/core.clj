@@ -17,7 +17,7 @@
 (defn pub-change [sid cid data]
   (go
     (>! ch {:topic (:change-topic env)
-            :key :change
+            :key   sid
             :value {:sid  sid
                     :cid  cid
                     :data data}}))

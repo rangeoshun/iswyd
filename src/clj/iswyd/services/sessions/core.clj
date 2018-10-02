@@ -17,7 +17,7 @@
 
 (defn multi-handler [request]
   {:status 200
-   :body (json/write-str {:data (mc/find db coll {} {:_id 0 :data 0 :sid 1 :cids 0})})})
+   :body (json/write-str {:data (mc/find-maps db coll {})})})
 
 (defn wrap-cors [handler]
   (fn [request]
