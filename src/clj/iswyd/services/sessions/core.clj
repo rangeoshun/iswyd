@@ -7,14 +7,9 @@
             [compojure.route :as route]
             [monger.collection :as mc]
             [monger.core :as mg]
-            [monger.query :refer :all]
             [monger.util :as mu]
             [ring.middleware.cookies :as rm])
   (:import (com.mongodb MongoOptions ServerAddress)))
-
-;; TODO: Find out what is the idiomatic way to handle errors
-(defonce ch (async/producer {:bootstrap.servers (:kafka-host env)}
-                            :keyword :edn))
 
 (defonce conn (mg/connect {:host (:mongo-host env)}))
 (defonce db (mg/get-db conn (:mongo-db env)))
@@ -22,9 +17,7 @@
 
 (defn multi-handler [request]
   {:status 200
-   :body (json/write-str {:data (with-collection db coll
-                                  (find {})
-                                  (fields [:_id]))})})
+   :body (json/write-str {:data (mc/find db coll {} {:_id 0 :data 0 :sid 1 :cids 0})})})
 
 (defn wrap-cors [handler]
   (fn [request]

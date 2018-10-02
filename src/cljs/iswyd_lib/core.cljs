@@ -176,7 +176,6 @@
   (loop [nodes nodes]
     (let [node (first nodes)
           others (rest nodes)]
-      (js/console.log node)
       (if node (mask-node! node))
       (if-not (empty? others)
         (recur others)))))

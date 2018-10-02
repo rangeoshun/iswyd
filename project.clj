@@ -125,7 +125,7 @@
 
              :sessions-srv-dev {:plugins [[lein-ring "0.12.1"]]
                                 :source-paths ["src/clj/iswyd/services/decode" "src/cljc"]
-                                :ring {:port 3454
+                                :ring {:port 3453
                                        :main iswyd.services.sessions.core/-main
                                        :handler iswyd.services.sessions.core/main}}
 
