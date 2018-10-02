@@ -31,7 +31,6 @@
                  :key-fn keyword))
 
 (defn pub-decode [sid cid data]
-  (log/info sid cid data)
   (go
     (>! p-ch {:topic (:decode-topic env)
               :key   sid
