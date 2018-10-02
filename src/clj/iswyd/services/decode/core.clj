@@ -7,6 +7,7 @@
             [compojure.route :as route]
             [kinsky.client :as client]
             [kinsky.async :as async]
+            [monger.util :as mu]
             [ring.middleware.cookies :as rm]
             [ring.util.codec :as ruc])
   (:import rufus.lzstring4java.LZString))
@@ -15,7 +16,7 @@
                               :keyword :edn))
 
 (defonce c-vec (async/consumer {:bootstrap.servers (:kafka-host env)
-                                :group.id          (:decode-group env)}
+                                :group.id          (mu/random-uuid)}
                                (client/keyword-deserializer)
                                (client/edn-deserializer)))
 
@@ -30,6 +31,7 @@
                  :key-fn keyword))
 
 (defn pub-decode [sid cid data]
+  (log/info sid cid data)
   (go
     (>! p-ch {:topic (:decode-topic env)
               :key   sid
@@ -39,7 +41,6 @@
 
 (a/go-loop []
   (when-let [msg (<! e-ch)]
-    (log/info msg)
     (if (:value msg)
       (pub-decode (:sid (:value msg)) (:cid (:value msg)) (:data (:value msg))))
     (recur)))

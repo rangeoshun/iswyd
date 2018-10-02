@@ -20,6 +20,7 @@ services:
   change_srv:
     image: clojure:lein-2.8.1
     restart: always
+    hostname: change_srv
     ports:
       - 3450:3450
     volumes:
@@ -34,6 +35,7 @@ services:
   decode_srv:
     image: clojure:lein-2.8.1
     restart: always
+    hostname: decode_srv
     ports:
       - 3451:3451
     volumes:
@@ -48,6 +50,7 @@ services:
   row_srv:
     image: clojure:lein-2.8.1
     restart: always
+    hostname: row_srv
     ports:
       - 3452:3452
     volumes:
@@ -62,6 +65,7 @@ services:
   sessions_srv:
     image: clojure:lein-2.8.1
     restart: always
+    hostname: session_srv
     ports:
       - 3453:3453
     volumes:
@@ -76,6 +80,7 @@ services:
   kafka:
     image: spotify/kafka
     restart: always
+    hostname: kafka
     ports:
       - 9092:9092
       - 2181:2181
@@ -91,6 +96,7 @@ services:
   mongo:
     image: mongo:3.4
     restart: always
+    hostname: mongo
     ports:
       - 27017:27017
     volumes:
@@ -110,7 +116,5 @@ services:
     ports:
       - 8080:8080
 
-volumes:
-  target:
 networks:
   dev_net:
