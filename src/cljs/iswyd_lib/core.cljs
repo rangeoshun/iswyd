@@ -135,24 +135,48 @@
       (if-not (empty? others)
         (recur others)))))
 
+(defn mark? [node] (.getAttribute node "data-iswyd-mark"))
+
+(defn mark! [node]
+  (let [mark (mark? node)]
+    (if-not mark
+      ((fn [] (let [mark (random-uuid)]
+               (. node setAttribute "data-iswyd-mark" mark)
+               mark))))
+    mark))
+
 (defn create-mask [node]
-  (let [mask  (. js/document createElement "div")
-        comp  (.getComputedStyle js/window node)
-        style (merge comp {:width      (.-offsetWidth node)
-                           :height     (.-offsetHeight node)
-                           :display    "inline-block"
-                           :background "#333"})]
+  (let [mask  (.createElement js/document "div")
+        orig  (.querySelector (doc-root) (str "*[data-iswyd-mark=\"" (mark! node) "\"]"))
+        comp  (.getComputedStyle js/window orig)
+        style #js {:width      (str (.-offsetWidth orig) "px")
+                   :height     (str (.-offsetHeight orig) "px")
+                   :display    "inline-block"
+                   :background "#333"}]
+
     (.forEach
-     (.keys js/Object style) (fn [key]
-                            (aset (.-style mask) key (aget style key))))))
+     (.keys js/Object comp) (fn [key] (aset (.-style mask) key (aget comp key))))
+    (.forEach
+     (.keys js/Object style) (fn [key] (aset (.-style mask) key (aget style key))))
+
+    mask))
 
 (defn mask-node! [node]
   (.replaceWith node (create-mask node)))
+
+(defn mark-nodes! [nodes]
+  (loop [nodes nodes]
+    (let [node (first nodes)
+          others (rest nodes)]
+      (if node (mark! node))
+      (if-not (empty? others)
+        (recur others)))))
 
 (defn mask-nodes! [nodes]
   (loop [nodes nodes]
     (let [node (first nodes)
           others (rest nodes)]
+      (js/console.log node)
       (if node (mask-node! node))
       (if-not (empty? others)
         (recur others)))))
@@ -160,22 +184,24 @@
 (defn mask! [root]
   (loop [ex @excludes]
     (let [sel    (first ex)
-          nodes  (js->clj (flatten (js/Array. (. root querySelectorAll sel))))
+          nodes  (array-seq (.querySelectorAll root sel))
           others (rest ex)]
-      (if (any? nodes) (mask-nodes! nodes))
+      (mark-nodes! nodes)
+      (mask-nodes! nodes)
       (if-not (empty? others)
         (recur others)))))
 
 (defn sanitize! [root]
   ;; (add-clear root)
+  (mask! root)
   (del-nodes! (scripts root))
   (abs-src! (imgs root))
   (abs-href! (links root))
   (cp-values! (inputs root))
-  (mask! root)
   root)
 
 (defn capture []
+  (mark-nodes! (array-seq (.querySelectorAll (doc-root) "*")))
   (.-outerHTML (sanitize! (clone-root))))
 
 (def obs-conf #js {:attributes true
@@ -203,8 +229,8 @@
 (defn mouse-ev [type, ev] {:tp type
                            :bs (.-buttons ev)
                            :ks (keys-num ev)
-                           :x (.-clientX ev)
-                           :y (.-clientY ev)
+                           :x  (.-clientX ev)
+                           :y  (.-clientY ev)
                            :tm (now)})
 
 (defn pos-handler! [type, ev]
@@ -240,18 +266,6 @@
 (defn listen-up! []
   (js/addEventListener "mouseup" (fn [ev] (log-mouse! (mouse-ev :up ev)))))
 
-(defn mark? [node] (.getAttribute node "data-iswyd-mark"))
-
-;; (defn mark [node]
-;;   (let [mark (mark? node)]
-;;     (js/console.log mark)
-;;     (if-not mark
-;;       ((fn [] (let [mark (random-uuid)]
-;;               (js/console.log mark)
-;;               (. node setAttribute "data-iswyd-mark" mark)
-;;               mark))))
-;;     mark))
-
 ;; (defn scroll-target [node] (if (= node js/document) js/document.body node))
 
 (defn scroll-ev [type, ev]
@@ -259,8 +273,8 @@
     {:tp type
      ;; :m (mark node)
      :ks (keys-num ev)
-     :x (.-scrollX js/window)
-     :y (.-scrollY js/window)
+     :x  (.-scrollX js/window)
+     :y  (.-scrollY js/window)
      :tm (now)}))
 
 (defn scroll-change [prev curr]
@@ -284,8 +298,8 @@
   (scroll-cycle!))
 
 (defn resize-ev [] {:tp :resize
-                    :w (aget js/window "innerWidth")
-                    :h (aget js/window "innerHeight")
+                    :w  (aget js/window "innerWidth")
+                    :h  (aget js/window "innerHeight")
                     :tm (now)})
 
 (defn resize-change [prev curr]
@@ -319,8 +333,8 @@
   (js/setInterval #(post-change!) 10000)
   (js/addEventListener "blur" #(post-change!)))
 
-(defn init-changelog! [opts & {:keys [:exclude] :or {:exclude []}}]
-  (reset! excludes exclude)
+(defn init-changelog! [opts]
+  (reset! excludes (opts "exclude"))
   (if-not @ready
     (do
       (reset! ready true)
