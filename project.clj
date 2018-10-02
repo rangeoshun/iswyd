@@ -123,6 +123,12 @@
                                   :main iswyd.services.row.core/-main
                                   :handler iswyd.services.row.core/main}}
 
+             :sessions-srv-dev {:plugins [[lein-ring "0.12.1"]]
+                                :source-paths ["src/clj/iswyd/services/decode" "src/cljc"]
+                                :ring {:port 3454
+                                       :main iswyd.services.sessions.core/-main
+                                       :handler iswyd.services.sessions.core/main}}
+
              :prod {:resource-paths ["config/prod"]}
 
              :dev {:repl-options {:init-ns iswyd.repl}
