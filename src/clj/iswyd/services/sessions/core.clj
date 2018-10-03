@@ -17,7 +17,20 @@
 
 (defn multi-handler [request]
   {:status 200
-   :body (json/write-str {:data (mc/find-maps db coll {} {:_id 0 :data 0 :cids 0})})})
+   :body (json/write-str {:success true
+                          :data (mc/find-maps db coll {} {:_id 1})})})
+
+(defn solo-handler [request]
+  (log/info (:params request))
+  (let [session (mc/find-one-as-map
+                 db coll {:_id (:id (:params request))} {:_id 1 :data 1})]
+    (if session
+      {:status 200
+       :body (json/write-str {:success true
+                              :data session})}
+
+      {:status 404
+       :body (json/write-str {:success false})})))
 
 (defn wrap-cors [handler]
   (fn [request]
@@ -25,6 +38,7 @@
 
 (defroutes srv-routes
   (GET "/" request (multi-handler request))
+  (GET "/:id/" request (solo-handler request))
   (route/resources "/")
   (route/not-found {:status 405
                     :body   (json/write-str {:success false})}))
