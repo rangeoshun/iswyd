@@ -30,6 +30,20 @@
 
 (def excludes (atom []))
 
+(def frame (dom/createDom "iframe"))
+
+(defn add-css [node style]
+  (.forEach
+   (.keys js/Object style) (fn [key] (aset (.-style node) key (aget style key)))))
+
+(defn init-frame! [root]
+  (add-css frame #js {:width    (str (.-innerWidth js/window) "px")
+                      :height   (str (.-innerHeight js/window) "px")
+                      :position "fixed"
+                      :top      "200%"
+                      :left     "200%"})
+  (.appendChild (.querySelector root "body") frame))
+
 (defn now []
   (. (js/Date.) getTime))
 
@@ -352,7 +366,8 @@
         (listen-scroll!)
         (listen-resize!)
         (listen-change! (inputs root))
-        (. obs observe root obs-conf))
+        (. obs observe root obs-conf)
+        (init-frame! root))
       (init-posting!)
       (set! (.-onmessage worker) (fn [msg] (worker-cb msg)))
       true)
