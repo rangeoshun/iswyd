@@ -1,5 +1,6 @@
 (ns iswyd-lib.core
   (:require [goog.dom :as dom]
+            [clojure.string :as cstr]
             [cljsjs.lz-string]))
 
 ;; -------------------------
@@ -161,8 +162,13 @@
 
     mask))
 
+(defn mask-input! [node]
+  (.setAttribute node "value" (cstr/replace (.-value node) #"." "•")))
+
 (defn mask-node! [node]
-  (.replaceWith node (create-mask node)))
+  (if (= (.-localName node) "input")
+    (mask-input! node)
+    (.replaceWith node (create-mask node))))
 
 (defn mark-nodes! [nodes]
   (loop [nodes nodes]
@@ -192,11 +198,11 @@
 
 (defn sanitize! [root]
   ;; (add-clear root)
-  (mask! root)
   (del-nodes! (scripts root))
   (abs-src! (imgs root))
   (abs-href! (links root))
   (cp-values! (inputs root))
+  (mask! root)
   root)
 
 (defn capture []
