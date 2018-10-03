@@ -333,7 +333,7 @@
   (js/addEventListener "blur" #(post-change!)))
 
 (defn init-changelog! [opts]
-  (reset! excludes (opts "exclude"))
+  (reset! excludes (opts "exclude" []))
   (if-not @ready
     (do
       (reset! ready true)
@@ -352,7 +352,7 @@
       true)
     false))
 
-(def iswyd-ext #js {:init       (fn [opts] (init-changelog! (js->clj opts)))
+(def iswyd-ext #js {:init       (fn [opts] (init-changelog! (js->clj (or opts {}))))
                     :capture    (fn [] (.-outerHTML (sanitize! (clone-root))))
                     :changelog  (fn [] (clj->js @changelog))
                     :postchange (fn [] (post-change!))})
