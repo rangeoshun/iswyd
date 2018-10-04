@@ -28,20 +28,31 @@
 
 (def changelog (atom []))
 
-(def excludes (atom []))
+(def excludes (atom ""))
 
 (def frame (dom/createDom "iframe"))
 
-(defn add-css [node style]
+(defn add-css! [node style]
   (.forEach
    (.keys js/Object style) (fn [key] (aset (.-style node) key (aget style key)))))
 
+(defn mark? [node] (.getAttribute node "data-iswyd-mark"))
+
+(defn mark! [node]
+  (let [mark (mark? node)]
+    (if-not mark
+      (do (let [mark (random-uuid)]
+                (. node setAttribute "data-iswyd-mark" mark)
+                mark)))
+    mark))
+
 (defn init-frame! [root]
-  (add-css frame #js {:width    (str (.-innerWidth js/window) "px")
-                      :height   (str (.-innerHeight js/window) "px")
-                      :position "fixed"
-                      :top      "200%"
-                      :left     "200%"})
+  (add-css! frame #js {:width    (str (.-innerWidth js/window) "px")
+                       :height   (str (.-innerHeight js/window) "px")
+                       :position "fixed"
+                       :top      "200%"
+                       :left     "200%"})
+  ;;(mark! frame)
   (.appendChild (.querySelector root "body") frame))
 
 (defn now []
@@ -72,9 +83,7 @@
                                              :data (compress changes)})})))))
 
 (defn log! [ev]
-  (swap! changelog (fn [] (conj @changelog ev)))
-  ;;(js/console.log (clj->js ev))
-  )
+  (swap! changelog (fn [] (conj @changelog ev))))
 
 (defn log-change! [patch key]
   (if-not (empty? patch)
@@ -97,18 +106,36 @@
   (log! ev)
   (reset! prev-resize ev))
 
-(defn doc-root [] (aget js/document.children 0))
+(defn doc-root []
+  (.querySelector js/document "html"))
 
 (defn clone-root []
-  (. (doc-root) cloneNode true))
+  (.cloneNode (doc-root) true))
+
+(defn frame! [root]
+  ;; root)
+  (let [doc (.-outerHTML root)
+        fdoc (.-contentDocument frame)]
+    (.write fdoc doc)
+    (.querySelector fdoc "html")))
 
 (defn get-tags [root tag]
   (array-seq (dom/getElementsByTagName tag root)))
 
-(defn scripts [root] (get-tags root "script"))
-(defn links [root] (get-tags root "link"))
-(defn imgs [root] (get-tags root "img"))
-(defn inputs [root] (get-tags root "input"))
+(defn iframes [root]
+  (get-tags root "iframe"))
+
+(defn scripts [root]
+  (get-tags root "script"))
+
+(defn links [root]
+  (get-tags root "link"))
+
+(defn imgs [root]
+  (get-tags root "img"))
+
+(defn inputs [root]
+  (get-tags root "input"))
 
 ;; (def clear-css "* { margin: 0; padding: 0; border: none; }")
 ;; (defn clear-style [] (js/document.createElement "style"))
@@ -150,30 +177,16 @@
       (if-not (empty? others)
         (recur others)))))
 
-(defn mark? [node] (.getAttribute node "data-iswyd-mark"))
-
-(defn mark! [node]
-  (let [mark (mark? node)]
-    (if-not mark
-      ((fn [] (let [mark (random-uuid)]
-               (. node setAttribute "data-iswyd-mark" mark)
-               mark))))
-    mark))
-
 (defn create-mask [node]
   (let [mask  (.createElement js/document "div")
-        orig  (.querySelector (doc-root) (str "*[data-iswyd-mark=\"" (mark! node) "\"]"))
-        comp  (.getComputedStyle js/window orig)
-        style #js {:width      (str (.-offsetWidth orig) "px")
-                   :height     (str (.-offsetHeight orig) "px")
+        ;;orig  (.querySelector (doc-root) (str "[data-iswyd-mark=\"" (mark? node)) "\"]")
+        comp  (.getComputedStyle js/window node)
+        style #js {:width      (str (.-offsetWidth node) "px")
+                   :height     (str (.-offsetHeight node) "px")
                    :display    "inline-block"
                    :background "#333"}]
-
-    (.forEach
-     (.keys js/Object comp) (fn [key] (aset (.-style mask) key (aget comp key))))
-    (.forEach
-     (.keys js/Object style) (fn [key] (aset (.-style mask) key (aget style key))))
-
+    (add-css! mask comp)
+    (add-css! mask style)
     mask))
 
 (defn mask-input! [node]
@@ -184,43 +197,40 @@
     (mask-input! node)
     (.replaceWith node (create-mask node))))
 
-(defn mark-nodes! [nodes]
-  (loop [nodes nodes]
-    (let [node (first nodes)
-          others (rest nodes)]
-      (if node (mark! node))
-      (if-not (empty? others)
-        (recur others)))))
+;; (defn mark-nodes! [nodes]
+;;   (loop [nodes nodes]
+;;     (let [node   (first nodes)
+;;           others (rest nodes)]
+;;       (if node (mark! node))
+;;       (if-not (empty? others)
+;;         (recur others)))))
 
 (defn mask-nodes! [nodes]
   (loop [nodes nodes]
-    (let [node (first nodes)
+    (let [node   (first nodes)
           others (rest nodes)]
       (if node (mask-node! node))
       (if-not (empty? others)
         (recur others)))))
 
+(defn excluded-nodes [root]
+  (array-seq (.querySelectorAll root (str @excludes))))
+
 (defn mask! [root]
-  (loop [ex @excludes]
-    (let [sel    (first ex)
-          nodes  (array-seq (.querySelectorAll root sel))
-          others (rest ex)]
-      (mark-nodes! nodes)
-      (mask-nodes! nodes)
-      (if-not (empty? others)
-        (recur others)))))
+  (mask-nodes! (excluded-nodes root))
+  root)
 
 (defn sanitize! [root]
   ;; (add-clear root)
+  (del-nodes! (iframes root))
   (del-nodes! (scripts root))
   (abs-src! (imgs root))
   (abs-href! (links root))
   (cp-values! (inputs root))
-  (mask! root)
   root)
 
 (defn capture []
-  (mark-nodes! (array-seq (.querySelectorAll (doc-root) "*")))
+  ;; (mark-nodes! (excluded-nodes (doc-root)))
   (.-outerHTML (sanitize! (clone-root))))
 
 (def obs-conf #js {:attributes true
@@ -234,10 +244,14 @@
 
 (defn change-handler! []
   (let [html (capture)]
-    (.postMessage worker (clj->js [@prev-html, html]))
+    (js/setTimeout
+     (fn [] (.postMessage
+            worker
+            (clj->js [@prev-html,
+                      (.-outerHTML (mask! (frame! (sanitize! (clone-root)))))]))))
     (reset! prev-html html)))
 
-(def obs (js/MutationObserver. (fn [] (change-handler!))))
+(def obs (js/MutationObserver. (fn [ev] (change-handler!))))
 
 (defn keys-num [ev]
     (+ (if (aget ev "ctrlKey") 1 0)
@@ -353,12 +367,13 @@
   (js/addEventListener "blur" #(post-change!)))
 
 (defn init-changelog! [opts]
-  (reset! excludes (opts "exclude" []))
   (if-not @ready
     (do
+      (reset! excludes (.join (aget opts "excludes") ","))
       (reset! ready true)
       (reset! sid (random-uuid))
       (let [root (doc-root)]
+        (init-frame! root)
         (change-handler!)
         (listen-move!)
         (listen-down!)
@@ -366,15 +381,15 @@
         (listen-scroll!)
         (listen-resize!)
         (listen-change! (inputs root))
-        (. obs observe root obs-conf)
-        (init-frame! root))
+        (. obs observe root obs-conf))
       (init-posting!)
       (set! (.-onmessage worker) (fn [msg] (worker-cb msg)))
       true)
     false))
 
-(def iswyd-ext #js {:init       (fn [opts] (init-changelog! (js->clj (or opts {}))))
-                    :capture    (fn [] (.-outerHTML (sanitize! (clone-root))))
+(def iswyd-ext #js {:init       (fn [opts]
+                                  (init-changelog! (or opts #js {:excludes ""})))
+                    :capture    (fn [] (capture))
                     :changelog  (fn [] (clj->js @changelog))
                     :postchange (fn [] (post-change!))})
 
