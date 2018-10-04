@@ -166,12 +166,17 @@
 
 (defn create-mask [node]
   (let [mask  (.createElement js/document "div")
-        ;;orig  (.querySelector (doc-root) (str "[data-iswyd-mark=\"" (mark? node)) "\"]")
-        comp  (.getComputedStyle js/window node)
-        style #js {:width      (str (.-offsetWidth node) "px")
-                   :height     (str (.-offsetHeight node) "px")
+        orig  (.querySelector (doc-root) (str "[data-iswyd-mark=\"" (mark? node) "\"]"))
+        comp  (.getComputedStyle js/window orig)
+        style #js {:width      (str (.-offsetWidth orig) "px")
+                   :height     (str (.-offsetHeight orig) "px")
                    :display    "inline-block"
                    :background "#333"}]
+        ;; comp  (.getComputedStyle js/window node)
+        ;; style #js {:width      (str (.-offsetWidth node) "px")
+        ;;            :height     (str (.-offsetHeight node) "px")
+        ;;            :display    "inline-block"
+        ;;            :background "#333"}]
     (add-css! mask comp)
     (add-css! mask style)
     mask))
@@ -184,13 +189,13 @@
     (mask-input! node)
     (.replaceWith node (create-mask node))))
 
-;; (defn mark-nodes! [nodes]
-;;   (loop [nodes nodes]
-;;     (let [node   (first nodes)
-;;           others (rest nodes)]
-;;       (if node (mark! node))
-;;       (if-not (empty? others)
-;;         (recur others)))))
+(defn mark-nodes! [nodes]
+  (loop [nodes nodes]
+    (let [node   (first nodes)
+          others (rest nodes)]
+      (if node (mark! node))
+      (if-not (empty? others)
+        (recur others)))))
 
 (defn mask-nodes! [nodes]
   (loop [nodes nodes]
@@ -220,8 +225,11 @@
   root)
 
 (defn capture [root]
-  ;; (mark-nodes! (excluded-nodes (doc-root)))
-  (.-outerHTML (mask! (frame! (sanitize! root)))))
+  (.-outerHTML (mask!
+                ;;(frame!
+                (sanitize! root)
+                ;;)
+               )))
 
 (defn init-worker! []
   (js/Worker. "/js/bootstrap_worker.js"))
@@ -237,6 +245,7 @@
             (clj->js ["compress" (clj->js changes)]))))))
 
 (defn change-handler! []
+  (mark-nodes! (excluded-nodes (doc-root)))
   (let [html (capture (clone-root))]
     (js/setTimeout
      (fn [] (.postMessage
@@ -380,8 +389,9 @@
       (reset! excludes (cstr/join "," (:exclude opts)))
       (reset! ready true)
       (reset! sid (random-uuid))
+      (mark-nodes! (excluded-nodes (doc-root)))
       (let [root (doc-root)]
-        (init-frame! root)
+        ;; (init-frame! root)
         (change-handler!)
         (listen-move!)
         (listen-down!)
