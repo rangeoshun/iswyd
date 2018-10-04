@@ -1,36 +1,34 @@
 (ns iswyd-lib.core
   (:require [goog.dom :as dom]
             [clojure.string :as cstr]
-            [cljsjs.lz-string]))
+            [clojure.string :as str]))
 
 ;; -------------------------
 ;; Changelog
 ;; TODO: Throttle recording of changes?
-;; TODO: Decide to use absolute or relative times for changes
-
-(def lz js/LZString)
+;; TODO: Decide on whether to use absolute or relative times for changes
 
 ;; (def last-tm (atom 0))
 
-(def sid (atom ""))
-(def ready (atom false))
+(defonce sid (atom ""))
+(defonce ready (atom false))
 
-(def prev-html (atom ""))
+(defonce prev-html (atom ""))
 
-(def prev-pos (atom {}))
-(def curr-pos (atom {}))
+(defonce prev-pos (atom {}))
+(defonce curr-pos (atom {}))
 
-(def prev-resize (atom {}))
-(def curr-resize (atom {}))
+(defonce prev-resize (atom {}))
+(defonce curr-resize (atom {}))
 
-(def prev-scroll (atom {}))
-(def curr-scroll (atom {}))
+(defonce prev-scroll (atom {}))
+(defonce curr-scroll (atom {}))
 
-(def changelog (atom []))
+(defonce changelog (atom []))
 
-(def excludes (atom ""))
+(defonce excludes (atom ""))
 
-(def frame (dom/createDom "iframe"))
+(defonce frame (dom/createDom "iframe"))
 
 (defn add-css! [node style]
   (.forEach
@@ -67,20 +65,15 @@
 ;;     (reset! last-tm t2)
 ;;     (- t2 t1)))
 
-(defn compress [log] (lz.compressToBase64 (js/JSON.stringify (clj->js log))))
 
-(defn post-change! []
-  (let [changes @changelog]
-    (if-not (empty? changes)
-      (do
-        (reset! changelog [])
-        ;;(reset! prev-html "")
-        (js/fetch
-         "http://0.0.0.0:3450/"
-         #js {:method 'POST
-              :body (.stringify js/JSON #js {:sid (str @sid)
-                                             :cid (str (random-uuid))
-                                             :data (compress changes)})})))))
+(defn post-change! [changes]
+  (if-not (cstr/blank? changes)
+    (js/fetch
+     "http://0.0.0.0:3450/"
+     #js {:method 'POST
+          :body (.stringify js/JSON #js {:sid (str @sid)
+                                         :cid (str (random-uuid))
+                                         :data changes})})))
 
 (defn log! [ev]
   (swap! changelog (fn [] (conj @changelog ev))))
@@ -91,12 +84,6 @@
            :ky key
            :p patch
            :tm (now)})))
-
-(defn log-mouse! [ev]
-  (log! ev)
-  (if (= ev :click)
-    (post-change!))
-  (reset! prev-pos ev))
 
 (defn log-scroll! [ev]
   (log! ev)
@@ -214,7 +201,10 @@
         (recur others)))))
 
 (defn excluded-nodes [root]
-  (array-seq (.querySelectorAll root (str @excludes))))
+  ;;(.log js/console (clj->js @excludes))
+  (if-not (cstr/blank? @excludes)
+    (array-seq (.querySelectorAll root (clj->js @excludes)))
+    []))
 
 (defn mask! [root]
   (mask-nodes! (excluded-nodes root))
@@ -229,29 +219,38 @@
   (cp-values! (inputs root))
   root)
 
-(defn capture []
+(defn capture [root]
   ;; (mark-nodes! (excluded-nodes (doc-root)))
-  (.-outerHTML (sanitize! (clone-root))))
-
-(def obs-conf #js {:attributes true
-                   :childList true
-                   :subtree true})
+  (.-outerHTML (mask! (frame! (sanitize! root)))))
 
 (defn init-worker! []
   (js/Worker. "/js/bootstrap_worker.js"))
 
 (defonce worker (init-worker!))
 
-(defn change-handler! []
-  (let [html (capture)]
-    (js/setTimeout
+(defn compress-post! []
+  (js/setTimeout
+   (let [changes @changelog]
+     (reset! changelog [])
      (fn [] (.postMessage
             worker
-            (clj->js [@prev-html,
-                      (.-outerHTML (mask! (frame! (sanitize! (clone-root)))))]))))
+            (clj->js ["compress" (clj->js changes)]))))))
+
+(defn change-handler! []
+  (let [html (capture (clone-root))]
+    (js/setTimeout
+     (fn [] (.postMessage
+             worker
+             (clj->js ["patch-make"
+                       @prev-html,
+                       html]))))
     (reset! prev-html html)))
 
-(def obs (js/MutationObserver. (fn [ev] (change-handler!))))
+(def obs-conf #js {:attributes true
+                   :childList true
+                   :subtree true})
+
+(defonce obs (js/MutationObserver. (fn [ev] (change-handler!))))
 
 (defn keys-num [ev]
     (+ (if (aget ev "ctrlKey") 1 0)
@@ -265,6 +264,12 @@
                            :x  (.-clientX ev)
                            :y  (.-clientY ev)
                            :tm (now)})
+
+(defn log-mouse! [ev]
+  (log! ev)
+  (if (= ev :click)
+    (compress-post!))
+  (reset! prev-pos ev))
 
 (defn pos-handler! [type, ev]
   (reset! curr-pos (mouse-ev type ev)))
@@ -356,20 +361,23 @@
   (js/addEventListener "resize" (fn [_] (resize-handler!)))
   (resize-cycle!))
 
+(defn third [arr] (aget arr 0))
+
 (defn worker-cb [msg]
   (let [data  (.-data msg)
-        patch (aget data 0)
-        key   (aget data 1)]
-  (log-change! patch key)))
+        task  (first data)]
+    (if (= task "patch-make")
+      (log-change! (second data) (third data))
+      (post-change! (second data)))))
 
 (defn init-posting! []
-  (js/setInterval #(post-change!) 10000)
-  (js/addEventListener "blur" #(post-change!)))
+  (js/setInterval #(compress-post!) 10000)
+  (js/addEventListener "blur" #(compress-post!)))
 
 (defn init-changelog! [opts]
   (if-not @ready
     (do
-      (reset! excludes (.join (aget opts "excludes") ","))
+      (reset! excludes (cstr/join "," (:exclude opts)))
       (reset! ready true)
       (reset! sid (random-uuid))
       (let [root (doc-root)]
@@ -388,9 +396,10 @@
     false))
 
 (def iswyd-ext #js {:init       (fn [opts]
-                                  (init-changelog! (or opts #js {:excludes ""})))
-                    :capture    (fn [] (capture))
-                    :changelog  (fn [] (clj->js @changelog))
-                    :postchange (fn [] (post-change!))})
+                                  (init-changelog!
+                                   (merge {:exclude []}
+                                          (js->clj opts :keywordize-keys true))))
+                    :capture    (fn [] (capture (clone-root)))
+                    :changelog  (fn [] (clj->js @changelog))})
 
 (aset js/window "iSwyd" iswyd-ext)
