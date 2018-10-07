@@ -105,6 +105,16 @@ services:
     networks:
       - dev_net
 
+  nginx:
+    restart: unless-stopped
+    image: nginx
+    volumes:
+      - ./nginx/dev/:/etc/nginx/conf.d/
+    ports:
+      - 80:80
+    networks:
+      - dev_net
+
   # cadvisor:
   #   image: google/cadvisor
   #   restart: always

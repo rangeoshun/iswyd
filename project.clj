@@ -53,7 +53,7 @@
   {:builds {:min-lib
             {:source-paths ["src/cljs/iswyd/lib"]
              :compiler
-             {:externs ["iswyd-lib.ext.js"]
+             {:externs ["iswyd_lib.ext.js"]
               :output-to "target/cljsbuild/public/js/iswyd_lib.min.js"
               :output-dir "target/cljsbuild/public/js/min_lib_out"
               :optimizations :advanced

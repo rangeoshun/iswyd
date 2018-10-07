@@ -14,5 +14,5 @@ this.CLOSURE_IMPORT_SCRIPT = (function(global) {
 
 if (typeof goog == "undefined") importScripts(CLOSURE_BASE_PATH + "base.js");
 
-importScripts("iswyd-worker.js");
+importScripts("iswyd_worker.js");
 goog.require("iswyd_worker.core");
