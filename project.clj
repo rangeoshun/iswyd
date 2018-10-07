@@ -72,7 +72,7 @@
               :output-dir "target/cljsbuild/public/js/worker-out"
               :optimizations :advanced
               :source-map "target/cljsbuild/public/js/iswyd_lib_worker.js.map"
-              :pretty-print true}}
+              :pretty-print false}}
             :lib
             {:source-paths ["src/cljs/iswyd/lib"
                             "src/cljs/iswyd/api"]
@@ -82,18 +82,15 @@
               :output-dir "target/cljsbuild/public/js/lib_out"
               :optimizations :advanced
               :source-map "target/cljsbuild/public/js/iswyd_lib.js.map"
-              :pretty-print true}}
+              :pretty-print false}}
             :app
             {:source-paths ["src/cljs/iswyd/app"
-                            "src/cljs/iswyd/api"
-                            "env/dev/cljs/iswyd"]
-             :figwheel {:on-jsload "iswyd.app.core/mount-root"}
+                            "src/cljs/iswyd/api"]
              :compiler
-             {:main "iswyd.dev"
-              :output-to "target/cljsbuild/public/js/app.js"
+             {:output-to "target/cljsbuild/public/js/app.js"
               :output-dir "target/cljsbuild/public/js/app_out"
+              :optimizations :whitespace
               :source-map "target/cljsbuild/public/js/app.js.map"
-              :optimizations :advanced
               :pretty-print true}}}}
 
   :profiles {:change-srv-dev {:plugins [[lein-ring "0.12.1"]]

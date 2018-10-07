@@ -11,7 +11,6 @@
    (keys data)))
 
 (defn fetch [url opts]
-  (.log js/console url (clj->js opts))
   (let [req (js/fetch url (clj->js opts))]
     (.catch req (fn [err] (console.log err)))
     (.then req (fn [res] (.json res)))))
@@ -25,7 +24,7 @@
 (defn api-req [path opts data]
   (let [url (js/URL. (str host path))]
     (if (= :POST (:method opts))
-      (post-req url (merge opts {:body data}))
+      (post-req url (merge opts {:body (.stringify js/JSON (clj->js data))}))
       (get-req url opts data))))
 
 (defn post-change [sid changes]
