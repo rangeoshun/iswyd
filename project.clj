@@ -66,14 +66,14 @@
               :optimizations :advanced
               :pretty-print  true}}
             :worker
-            {:source-paths ["src/cljs/iswyd_worker"]
+            {:source-paths ["src/cljs/iswyd/worker"]
              :compiler
              {:output-to "target/cljsbuild/public/js/iswyd-worker.js"
               :output-dir "target/cljsbuild/public/js/worker-out"
               :optimizations :none
               :pretty-print  true}}
             :lib
-            {:source-paths ["src/cljs/iswyd_lib"]
+            {:source-paths ["src/cljs/iswyd/lib", "src/cljs/iswyd/api"]
              :compiler
              {:output-to "target/cljsbuild/public/js/iswyd-lib.js"
               :output-dir "target/cljsbuild/public/js/lib-out"
@@ -81,8 +81,8 @@
               :optimizations :none
               :pretty-print  true}}
             :app
-            {:source-paths ["src/cljs/iswyd_lib" "src/cljs/iswyd" "src/cljc/iswyd" "env/dev/cljs/iswyd"]
-             :figwheel {:on-jsload "iswyd.app/mount-root"}
+            {:source-paths ["src/cljs/iswyd/app" "env/dev/cljs/iswyd/api"]
+             :figwheel {:on-jsload "iswyd.app.core/mount-root"}
              :compiler
              {:main "iswyd.dev"
               :asset-path "/js/app-out"
