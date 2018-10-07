@@ -52,15 +52,6 @@
 ;; (defn csrf-token []
 ;;   (.getAttribute (.querySelector js/document "meta[csrf-token]") "csrf-token"))
 
-(defn post-change! [changes]
-  (if-not (cstr/blank? changes)
-    (js/fetch
-     ""
-     #js {:method 'POST
-          :body (.stringify js/JSON #js {:sid (str @sid)
-                                         :cid (str (random-uuid))
-                                         :data changes})})))
-
 (defn log! [ev]
   (swap! changelog (fn [] (conj @changelog ev))))
 
@@ -201,7 +192,7 @@
   (.-outerHTML (mask! (sanitize! root))))
 
 (defn init-worker! []
-  (js/Worker. "/js/bootstrap_worker.js"))
+  (js/Worker. "/js/iswyd_lib_worker.js"))
 
 (defonce worker (init-worker!))
 
@@ -217,12 +208,13 @@
   (mark-nodes! (excluded-nodes (doc-root)))
   (let [html (capture (clone-root))]
     (js/setTimeout
-     (fn [] (.postMessage
-             worker
-             (clj->js ["patch-make"
-                       @prev-html,
-                       html]))))
-    (reset! prev-html html)))
+     (fn []
+       (.postMessage
+        worker
+        (clj->js ["patch-make"
+                  @prev-html,
+                  html]))
+       (reset! prev-html html)))))
 
 (def obs-conf #js {:attributes true
                    :childList true
@@ -347,7 +339,7 @@
         task  (first data)]
     (if (= task "patch-make")
       (log-change! (second data) (third data))
-      (post-change! (second data)))))
+      (api/post-change (str @sid) (second data)))))
 
 (defn init-posting! []
   (js/setInterval #(compress-post!) 10000)
@@ -381,4 +373,5 @@
                     :capture    (fn [] (capture (clone-root)))
                     :changelog  (fn [] (clj->js @changelog))})
 
+(.log js/console "iSwyd registered, waiting for init...")
 (aset js/window "iSwyd" iswyd-ext)

@@ -12,8 +12,10 @@ services:
     working_dir: "/app"
     ports:
       - 3449:3449
-      - 7002:7002
-    entrypoint: lein figwheel app lib worker
+    command: >
+      /bin/bash -c "lein cljsbuild once app lib worker &&
+                    lein cljsbuild auto app lib worker &
+                    lein with-profile +app-dev trampoline ring server-headless"
     networks:
       - dev_net
 
@@ -106,10 +108,10 @@ services:
       - dev_net
 
   nginx:
+    image: nginx:alpine
     restart: unless-stopped
-    image: nginx
     volumes:
-      - ./nginx/dev/:/etc/nginx/conf.d/
+      - ./nginx/dev/app.conf:/etc/nginx/nginx.conf
     ports:
       - 80:80
     networks:

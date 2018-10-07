@@ -1,4 +1,4 @@
-(ns iswyd.lib.worker.core
+(ns iswyd.worker.core
   (:require [cljsjs.google-diff-match-patch]
             [cljsjs.lz-string]))
 

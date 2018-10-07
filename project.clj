@@ -35,7 +35,7 @@
 
   :min-lein-version "2.5.0"
   :uberjar-name "iswyd.warswyd.jar"
-  :main iswyd.server
+  ;; :main iswyd.app.server
   :omit-source true
   :clean-targets ^{:protect false}
   [:target-path
@@ -57,77 +57,76 @@
               :output-to "target/cljsbuild/public/js/iswyd_lib.min.js"
               :output-dir "target/cljsbuild/public/js/min_lib_out"
               :optimizations :advanced
-              :pretty-print  false}}
+              :pretty-print false}}
             :min-worker
-            {:source-paths ["src/cljs/iswyd/lib/worker"]
+            {:source-paths ["src/cljs/iswyd/worker"]
              :compiler
              {:output-to "target/cljsbuild/public/js/iswyd_worker.min.js"
               :output-dir "target/cljsbuild/public/js/min_worker-out"
               :optimizations :advanced
-              :pretty-print  true}}
+              :pretty-print true}}
             :worker
-            {:source-paths ["src/cljs/iswyd/lib/worker"]
+            {:source-paths ["src/cljs/iswyd/worker"]
              :compiler
-             {:output-to "target/cljsbuild/public/js/iswyd_worker.js"
-              :output-dir "target/cljsbuild/public/js/worker_out"
-              :optimizations :none
-              :pretty-print  true}}
+             {:output-to "target/cljsbuild/public/js/iswyd_lib_worker.js"
+              :output-dir "target/cljsbuild/public/js/worker-out"
+              :optimizations :advanced
+              :source-map "target/cljsbuild/public/js/iswyd_lib_worker.js.map"
+              :pretty-print true}}
             :lib
-            {:source-paths ["src/cljs/iswyd/lib", "src/cljs/iswyd/api"]
+            {:source-paths ["src/cljs/iswyd/lib"
+                            "src/cljs/iswyd/api"]
              :compiler
-             {:output-to "target/cljsbuild/public/js/iswyd_lib.js"
+             {:externs ["iswyd_lib.ext.js"]
+              :output-to "target/cljsbuild/public/js/iswyd_lib.js"
               :output-dir "target/cljsbuild/public/js/lib_out"
-              :source-map true
-              :optimizations :none
-              :pretty-print  true}}
+              :optimizations :advanced
+              :source-map "target/cljsbuild/public/js/iswyd_lib.js.map"
+              :pretty-print true}}
             :app
-            {:source-paths ["src/cljs/iswyd/app" "env/dev/cljs/iswyd/api"]
+            {:source-paths ["src/cljs/iswyd/app"
+                            "src/cljs/iswyd/api"
+                            "env/dev/cljs/iswyd"]
              :figwheel {:on-jsload "iswyd.app.core/mount-root"}
              :compiler
              {:main "iswyd.dev"
-              :asset-path "/js/app-out"
               :output-to "target/cljsbuild/public/js/app.js"
               :output-dir "target/cljsbuild/public/js/app_out"
-              :source-map true
-              :optimizations :none
-              :pretty-print  true}}}}
-
-  :figwheel
-  {:http-server-root "public"
-   :repl false
-   :server-port 3449
-   :server-ip "0.0.0.0"
-   :nrepl-port 7002
-   :hawk-options {:watcher :polling}
-   :nrepl-middleware [cider.piggieback/wrap-cljs-repl]
-   :css-dirs ["resources/public/css"]
-   :ring-handler iswyd.handler/app}
+              :source-map "target/cljsbuild/public/js/app.js.map"
+              :optimizations :advanced
+              :pretty-print true}}}}
 
   :profiles {:change-srv-dev {:plugins [[lein-ring "0.12.1"]]
-                              :source-paths ["src/clj/iswyd/services/change" "src/cljc"]
+                              :source-paths ["src/clj/iswyd/services/change"]
                               :ring {:port 3450
                                      :main iswyd.services.change.core/-main
                                      :handler iswyd.services.change.core/main
                                      :open-browser? false}}
 
              :decode-srv-dev {:plugins [[lein-ring "0.12.1"]]
-                              :source-paths ["src/clj/iswyd/services/decode" "src/cljc"]
+                              :source-paths ["src/clj/iswyd/services/decode"]
                               :ring {:port 3451
                                      :main iswyd.services.change.core/-main
                                      :handler iswyd.services.decode.core/main
                                      :open-browser? false}}
 
              :row-srv-dev {:plugins [[lein-ring "0.12.1"]]
-                           :source-paths ["src/clj/iswyd/services/decode" "src/cljc"]
+                           :source-paths ["src/clj/iswyd/services/decode"]
                            :ring {:port 3452
                                   :main iswyd.services.row.core/-main
                                   :handler iswyd.services.row.core/main}}
 
              :sessions-srv-dev {:plugins [[lein-ring "0.12.1"]]
-                                :source-paths ["src/clj/iswyd/services/sessions" "src/cljc"]
+                                :source-paths ["src/clj/iswyd/services/sessions"]
                                 :ring {:port 3453
                                        :main iswyd.services.sessions.core/-main
                                        :handler iswyd.services.sessions.core/main}}
+
+             :app-dev {:plugins [[lein-ring "0.12.1"]]
+                       :source-paths ["src/clj/iswyd/app"]
+                       :ring {:port 3449
+                              :main iswyd.app.server/-main
+                              :handler iswyd.app.handler/app}}
 
              :prod {:resource-paths ["config/prod"]}
 

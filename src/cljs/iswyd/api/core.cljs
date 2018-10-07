@@ -1,6 +1,6 @@
 (ns iswyd.api.core)
 
-(def host "http://0.0.0.0:3450/")
+(def host "http://0.0.0.0")
 
 (defn query [url_ data]
   (reduce
@@ -11,7 +11,8 @@
    (keys data)))
 
 (defn fetch [url opts]
-  (let [req (js/fetch url opts)]
+  (.log js/console url (clj->js opts))
+  (let [req (js/fetch url (clj->js opts))]
     (.catch req (fn [err] (console.log err)))
     (.then req (fn [res] (.json res)))))
 
@@ -23,9 +24,11 @@
 
 (defn api-req [path opts data]
   (let [url (js/URL. (str host path))]
-    (if (= :POST opts.method)
+    (if (= :POST (:method opts))
       (post-req url (merge opts {:body data}))
       (get-req url opts data))))
 
 (defn post-change [sid changes]
-  (api-req "/repos" {:method :POST} {'search_criteria term}))
+  (api-req "/api/change" {:method :POST} {:sid sid
+                                          :cid (str (random-uuid))
+                                          :data changes}))

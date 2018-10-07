@@ -1,4 +1,4 @@
-(ns iswyd.handler
+(ns iswyd.app.handler
   (:require [clojure.tools.logging :as log]
             [compojure.core :refer :all]
             [compojure.route :as route]

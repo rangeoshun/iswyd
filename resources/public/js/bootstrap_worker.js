@@ -1,4 +1,4 @@
-CLOSURE_BASE_PATH = "worker-out/goog/";
+CLOSURE_BASE_PATH = "worker_out/goog/";
 /**
  * Imports a script using the Web Worker importScript API.
  *
@@ -15,4 +15,4 @@ this.CLOSURE_IMPORT_SCRIPT = (function(global) {
 if (typeof goog == "undefined") importScripts(CLOSURE_BASE_PATH + "base.js");
 
 importScripts("iswyd_worker.js");
-goog.require("iswyd_worker.core");
+goog.require("iswyd.worker.core");
