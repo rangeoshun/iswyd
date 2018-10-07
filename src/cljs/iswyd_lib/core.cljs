@@ -1,4 +1,4 @@
-(ns iswyd-lib.core
+(ns iswyd.lib.core
   (:require [goog.dom :as dom]
             [clojure.string :as cstr]
             [clojure.string :as str]))

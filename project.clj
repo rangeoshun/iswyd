@@ -51,32 +51,32 @@
 
   :cljsbuild
   {:builds {:min-lib
-            {:source-paths ["src/cljs/iswyd_lib"]
+            {:source-paths ["src/cljs/iswyd/lib"]
              :compiler
              {:externs ["iswyd-lib.ext.js"]
-              :output-to "target/cljsbuild/public/js/iswyd-lib.min.js"
-              :output-dir "target/cljsbuild/public/js/min-lib-out"
+              :output-to "target/cljsbuild/public/js/iswyd_lib.min.js"
+              :output-dir "target/cljsbuild/public/js/min_lib_out"
               :optimizations :advanced
               :pretty-print  false}}
             :min-worker
-            {:source-paths ["src/cljs/iswyd_worker"]
+            {:source-paths ["src/cljs/iswyd/lib/worker"]
              :compiler
-             {:output-to "target/cljsbuild/public/js/iswyd-worker.min.js"
-              :output-dir "target/cljsbuild/public/js/min-worker-out"
+             {:output-to "target/cljsbuild/public/js/iswyd_worker.min.js"
+              :output-dir "target/cljsbuild/public/js/min_worker-out"
               :optimizations :advanced
               :pretty-print  true}}
             :worker
-            {:source-paths ["src/cljs/iswyd/worker"]
+            {:source-paths ["src/cljs/iswyd/lib/worker"]
              :compiler
-             {:output-to "target/cljsbuild/public/js/iswyd-worker.js"
-              :output-dir "target/cljsbuild/public/js/worker-out"
+             {:output-to "target/cljsbuild/public/js/iswyd_worker.js"
+              :output-dir "target/cljsbuild/public/js/worker_out"
               :optimizations :none
               :pretty-print  true}}
             :lib
             {:source-paths ["src/cljs/iswyd/lib", "src/cljs/iswyd/api"]
              :compiler
-             {:output-to "target/cljsbuild/public/js/iswyd-lib.js"
-              :output-dir "target/cljsbuild/public/js/lib-out"
+             {:output-to "target/cljsbuild/public/js/iswyd_lib.js"
+              :output-dir "target/cljsbuild/public/js/lib_out"
               :source-map true
               :optimizations :none
               :pretty-print  true}}
@@ -87,7 +87,7 @@
              {:main "iswyd.dev"
               :asset-path "/js/app-out"
               :output-to "target/cljsbuild/public/js/app.js"
-              :output-dir "target/cljsbuild/public/js/app-out"
+              :output-dir "target/cljsbuild/public/js/app_out"
               :source-map true
               :optimizations :none
               :pretty-print  true}}}}
