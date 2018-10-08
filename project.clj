@@ -70,7 +70,7 @@
              :compiler
              {:output-to     "target/cljsbuild/public/js/iswyd_lib_worker.js"
               :output-dir    "target/cljsbuild/public/js/worker-out"
-              :optimizations :advanced
+              :optimizations :simple
               :source-map    "target/cljsbuild/public/js/iswyd_lib_worker.js.map"
               :pretty-print   false}}
             :lib
@@ -80,7 +80,7 @@
              {:externs      ["iswyd_lib.ext.js"]
               :output-to    "target/cljsbuild/public/js/iswyd_lib.js"
               :output-dir   "target/cljsbuild/public/js/lib_out"
-              :optimizations :advanced
+              :optimizations :simple
               :source-map    "target/cljsbuild/public/js/iswyd_lib.js.map"
               :pretty-print  false}}
             :app
@@ -89,7 +89,7 @@
              :compiler
              {:output-to     "target/cljsbuild/public/js/app.js"
               :output-dir    "target/cljsbuild/public/js/app_out"
-              :optimizations :advanced
+              :optimizations :simple
               :source-map    "target/cljsbuild/public/js/app.js.map"
               :pretty-print  false}}}}
 
