@@ -2,7 +2,7 @@
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
-            :url "http://www.eclipse.org/legal/epl-v10.html"}
+            :url  "http://www.eclipse.org/legal/epl-v10.html"}
 
   :dependencies [[cljsjs/google-diff-match-patch "20121119-2"]
                  [cljsjs/lz-string "1.4.4-1"]
@@ -53,18 +53,18 @@
   {:builds {:min-lib
             {:source-paths ["src/cljs/iswyd/lib"]
              :compiler
-             {:externs ["iswyd_lib.ext.js"]
-              :output-to "target/cljsbuild/public/js/iswyd_lib.min.js"
-              :output-dir "target/cljsbuild/public/js/min_lib_out"
+             {:externs       ["iswyd_lib.ext.js"]
+              :output-to     "target/cljsbuild/public/js/iswyd_lib.min.js"
+              :output-dir    "target/cljsbuild/public/js/min_lib_out"
               :optimizations :advanced
-              :pretty-print false}}
+              :pretty-print  false}}
             :min-worker
             {:source-paths ["src/cljs/iswyd/worker"]
              :compiler
-             {:output-to "target/cljsbuild/public/js/iswyd_worker.min.js"
-              :output-dir "target/cljsbuild/public/js/min_worker-out"
+             {:output-to     "target/cljsbuild/public/js/iswyd_worker.min.js"
+              :output-dir    "target/cljsbuild/public/js/min_worker-out"
               :optimizations :advanced
-              :pretty-print true}}
+              :pretty-print  true}}
             :worker
             {:source-paths ["src/cljs/iswyd/worker"]
              :compiler
@@ -72,52 +72,52 @@
               :output-dir    "target/cljsbuild/public/js/worker-out"
               :optimizations :simple
               :source-map    "target/cljsbuild/public/js/iswyd_lib_worker.js.map"
-              :pretty-print   false}}
+              :pretty-print  false}}
             :lib
             {:source-paths ["src/cljs/iswyd/lib"
                             "src/cljs/iswyd/api"]
              :compiler
-             {:externs      ["iswyd_lib.ext.js"]
-              :output-to    "target/cljsbuild/public/js/iswyd_lib.js"
-              :output-dir   "target/cljsbuild/public/js/lib_out"
+             {:externs       ["iswyd_lib.ext.js"]
+              :output-to     "target/cljsbuild/public/js/iswyd_lib.js"
+              :output-dir    "target/cljsbuild/public/js/lib_out"
               :optimizations :simple
               :source-map    "target/cljsbuild/public/js/iswyd_lib.js.map"
               :pretty-print  false}}
             :app
-            {:main iswyd.app.core
+            {:main         iswyd.app.core
              :source-paths ["src/cljs/iswyd/app"]
              :compiler
              {:output-to     "target/cljsbuild/public/js/app.js"
               :output-dir    "target/cljsbuild/public/js/app_out"
-              :optimizations :simple
+              :optimizations :whitespace
               :source-map    "target/cljsbuild/public/js/app.js.map"
-              :pretty-print  false}}}}
+              :pretty-print  falseV}}}}
 
-  :profiles {:change-srv-dev {:plugins [[lein-ring "0.12.1"]]
+  :profiles {:change-srv-dev {:plugins      [[lein-ring "0.12.1"]]
                               :source-paths ["src/clj/iswyd/services/change"]
-                              :ring {:port 3450
-                                     :main iswyd.services.change.core/-main
-                                     :handler iswyd.services.change.core/main
-                                     :open-browser? false}}
+                              :ring         {:port          3450
+                                             :main          iswyd.services.change.core/-main
+                                             :handler       iswyd.services.change.core/main
+                                             :open-browser? false}}
 
-             :decode-srv-dev {:plugins [[lein-ring "0.12.1"]]
+             :decode-srv-dev {:plugins      [[lein-ring "0.12.1"]]
                               :source-paths ["src/clj/iswyd/services/decode"]
-                              :ring {:port 3451
-                                     :main iswyd.services.change.core/-main
-                                     :handler iswyd.services.decode.core/main
-                                     :open-browser? false}}
+                              :ring         {:port          3451
+                                             :main          iswyd.services.change.core/-main
+                                             :handler       iswyd.services.decode.core/main
+                                             :open-browser? false}}
 
-             :row-srv-dev {:plugins [[lein-ring "0.12.1"]]
+             :row-srv-dev {:plugins      [[lein-ring "0.12.1"]]
                            :source-paths ["src/clj/iswyd/services/decode"]
-                           :ring {:port 3452
-                                  :main iswyd.services.row.core/-main
-                                  :handler iswyd.services.row.core/main}}
+                           :ring         {:port    3452
+                                          :main    iswyd.services.row.core/-main
+                                          :handler iswyd.services.row.core/main}}
 
-             :sessions-srv-dev {:plugins [[lein-ring "0.12.1"]]
+             :sessions-srv-dev {:plugins      [[lein-ring "0.12.1"]]
                                 :source-paths ["src/clj/iswyd/services/sessions"]
-                                :ring {:port 3453
-                                       :main iswyd.services.sessions.core/-main
-                                       :handler iswyd.services.sessions.core/main}}
+                                :ring         {:port    3453
+                                               :main    iswyd.services.sessions.core/-main
+                                               :handler iswyd.services.sessions.core/main}}
 
              :app-dev {:plugins      [[lein-ring "0.12.1"]]
                        :source-paths ["src/clj/iswyd/app"]
@@ -141,17 +141,17 @@
                                   [pjstadig/humane-test-output "0.8.3"]]
 
                    :resource-paths ["config/dev"]
-                   :source-paths ["env/dev/clj"]
-                   :plugins [[lein-figwheel "0.5.16"]]
+                   :source-paths   ["env/dev/clj"]
+                   :plugins        [[lein-figwheel "0.5.16"]]
 
                    :injections [(require 'pjstadig.humane-test-output)
                                 (pjstadig.humane-test-output/activate!)]
 
                    :env {:dev true}}
 
-             :uberjar {:hooks [minify-assets.plugin/hooks]
+             :uberjar {:hooks        [minify-assets.plugin/hooks]
                        :source-paths ["env/prod/clj"]
-                       :prep-tasks ["compile" ["cljsbuild" "once" "min"]]
-                       :env {:production true}
-                       :aot :all
-                       :omit-source true}})
+                       :prep-tasks   ["compile" ["cljsbuild" "once" "min"]]
+                       :env          {:production true}
+                       :aot          :all
+                       :omit-source  true}})

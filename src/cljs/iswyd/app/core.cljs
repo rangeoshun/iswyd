@@ -1,50 +1,38 @@
 (ns iswyd.app.core
-  (:require [reagent.core :as reagent :refer [atom]]
-            [secretary.core :as secretary :include-macros true]
-            [accountant.core :as accountant]))
-
-;; -------------------------
-;; Views
-
-(defn home-page []
-  [:div [:h2 "Welcome to iSwyd??"]
-   [:div [:a {:href "/about"} "go to about page"]]])
-
-(defn about-page []
-  [:div [:h2 "About iSwyd"]
-   [:div [:a {:href "/"} "go to the home page"]]])
+  (:require [accountant.core :as accountant]
+            [reagent.core :as r]
+            [secretary.core :as secretary :include-macros true]))
 
 ;; -------------------------
 ;; Routes
 
-(defonce page (atom #'home-page))
+(defn main-layout []
+  [:h1 {} "( aɪzwʌɪd )"])
 
-(defn current-page []
-  [:div
-   [:input {:placeholder "Some text here"}]
-   [@page]
-   (map (fn [n] [:h3 {:key n} n]) (range 0 16))])
+(defonce page (atom #'main-layout))
+
+(def theme-map #js {:palette #js {:primary   #js {:light         "#ffffff"
+                                                  :main          "#eeeeee"
+                                                  :dark          "#bcbcbc"
+                                                  :contrast-text "#000000"}
+                                  :secondary #js {:ligh          "#ff7961"
+                                                  :main          "#f44336"
+                                                  :dark          "#ba000d"
+                                                  :contrast-text "#000000"}}})
 
 (secretary/defroute "/" []
-  (reset! page #'home-page))
-
-(secretary/defroute "/about" []
-  (reset! page #'about-page))
+  (reset! page #'main-layout))
 
 ;; -------------------------
 ;; Initialize app
 
 (defn mount-root []
-  (reagent/render [current-page] (.getElementById js/document "app")))
+  (r/render [main-layout] (.getElementById js/document "app")))
 
 (defn init! []
   (accountant/configure-navigation!
-    {:nav-handler
-     (fn [path]
-       (secretary/dispatch! path))
-     :path-exists?
-     (fn [path]
-       (secretary/locate-route path))})
+   {:nav-handler  #(secretary/dispatch! %1)
+    :path-exists? #(secretary/locate-route %1)})
   (accountant/dispatch-current!)
   (mount-root))
 
