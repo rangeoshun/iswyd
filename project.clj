@@ -68,32 +68,30 @@
             :worker
             {:source-paths ["src/cljs/iswyd/worker"]
              :compiler
-             {:output-to "target/cljsbuild/public/js/iswyd_lib_worker.js"
-              :output-dir "target/cljsbuild/public/js/worker-out"
-              :optimizations :advanced
-              :source-map "target/cljsbuild/public/js/iswyd_lib_worker.js.map"
-              :pretty-print true}}
+             {:output-to     "target/cljsbuild/public/js/iswyd_lib_worker.js"
+              :output-dir    "target/cljsbuild/public/js/worker-out"
+              :optimizations :whitespace
+              :source-map    "target/cljsbuild/public/js/iswyd_lib_worker.js.map"
+              :pretty-print   false}}
             :lib
             {:source-paths ["src/cljs/iswyd/lib"
                             "src/cljs/iswyd/api"]
              :compiler
-             {:externs ["iswyd_lib.ext.js"]
-              :output-to "target/cljsbuild/public/js/iswyd_lib.js"
-              :output-dir "target/cljsbuild/public/js/lib_out"
-              :optimizations :advanced
-              :source-map "target/cljsbuild/public/js/iswyd_lib.js.map"
-              :pretty-print true}}
+             {:externs      ["iswyd_lib.ext.js"]
+              :output-to    "target/cljsbuild/public/js/iswyd_lib.js"
+              :output-dir   "target/cljsbuild/public/js/lib_out"
+              :optimizations :whitespace
+              :source-map    "target/cljsbuild/public/js/iswyd_lib.js.map"
+              :pretty-print  false}}
             :app
-            {:source-paths ["src/cljs/iswyd/app"
-                            "src/cljs/iswyd/api"]
-             :figwheel {:on-jsload "iswyd.app.core/mount-root"}
+            {:main iswyd.app.core
+             :source-paths ["src/cljs/iswyd/app"]
              :compiler
-             {:main "iswyd.dev"
-              :output-to "target/cljsbuild/public/js/app.js"
-              :output-dir "target/cljsbuild/public/js/app_out"
-              :source-map "target/cljsbuild/public/js/app.js.map"
-              :optimizations :advanced
-              :pretty-print true}}}}
+             {:output-to     "target/cljsbuild/public/js/app.js"
+              :output-dir    "target/cljsbuild/public/js/app_out"
+              :optimizations :whitespace
+              :source-map    "target/cljsbuild/public/js/app.js.map"
+              :pretty-print  false}}}}
 
   :profiles {:change-srv-dev {:plugins [[lein-ring "0.12.1"]]
                               :source-paths ["src/clj/iswyd/services/change"]
@@ -121,16 +119,18 @@
                                        :main iswyd.services.sessions.core/-main
                                        :handler iswyd.services.sessions.core/main}}
 
-             :app-dev {:plugins [[lein-ring "0.12.1"]]
+             :app-dev {:plugins      [[lein-ring "0.12.1"]]
                        :source-paths ["src/clj/iswyd/app"]
-                       :ring {:port 3449
-                              :main iswyd.app.server/-main
-                              :handler iswyd.app.handler/app}}
+                       :preloads     [devtools.preload]
+                       :ring         {:port    3449
+                                      :main    iswyd.app.server/-main
+                                      :handler iswyd.app.handler/app}}
 
              :prod {:resource-paths ["config/prod"]}
 
              :dev {:repl-options {:init-ns iswyd.repl}
                    :dependencies [[cider/piggieback "0.3.8"]
+                                  [binaryage/oops "0.6.2"]
                                   [binaryage/devtools "0.9.10"]
                                   [ring/ring-mock "0.3.2"]
                                   [ring/ring-devel "1.6.3"]
