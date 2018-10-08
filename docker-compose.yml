@@ -13,7 +13,8 @@ services:
     ports:
       - 3449:3449
     command: >
-      /bin/bash -c "lein cljsbuild once app lib worker &&
+      /bin/bash -c "lein clean &&
+                    lein cljsbuild once app lib worker &&
                     lein cljsbuild auto app lib worker &
                     lein with-profile +app-dev trampoline ring server-headless"
     networks:
