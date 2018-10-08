@@ -1,7 +1,7 @@
 version: "3"
 services:
   app:
-    image: theasp/clojurescript-nodejs:latest
+    image: clojure:lein-2.8.1
     restart: always
     # stdin_open: true
     # tty: true
