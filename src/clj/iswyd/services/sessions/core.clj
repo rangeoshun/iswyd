@@ -38,7 +38,7 @@
 
 (defroutes srv-routes
   (GET "/" request (multi-handler request))
-  (GET "/:id/" request (solo-handler request))
+  (GET "/:id" request (solo-handler request))
   (route/resources "/")
   (route/not-found {:status 405
                     :body   (json/write-str {:success false})}))
