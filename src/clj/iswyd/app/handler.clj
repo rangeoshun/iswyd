@@ -43,7 +43,7 @@
         (assoc-in (handler request) [:cookies "iswyd-session"] {:value (mu/random-uuid)})
         (handler request)))))
 
-(def app
+(def main
   (wrap-cookies
    (wrap-session-id-cookie
     (wrap-defaults app-routes site-defaults))))

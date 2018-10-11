@@ -7,4 +7,4 @@
 
 (enable-console-print!)
 
-(app/init!)
+(app/main)

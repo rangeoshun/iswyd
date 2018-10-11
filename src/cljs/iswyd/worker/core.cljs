@@ -17,11 +17,11 @@
     (.postMessage js/self #js ["compress"
                                (.compressToBase64 lz (js/JSON.stringify log))])))
 
-(defn init []
+(defn main []
   (set! (.-onmessage js/self)
         (fn [msg]
           (if (= (first (.-data msg)) "patch-make")
             (handle-patch-make (rest (.-data msg)))
             (handle-compress (rest (.-data msg)))))))
 
-(init)
+(main)

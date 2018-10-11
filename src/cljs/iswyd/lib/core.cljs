@@ -373,5 +373,8 @@
                     :capture    (fn [] (capture (clone-root)))
                     :changelog  (fn [] (clj->js @changelog))})
 
-(.log js/console "iSwyd registered, waiting for init...")
-(aset js/window "iSwyd" iswyd-ext)
+(defn main []
+  (.log js/console "iSwyd registered, waiting for init...")
+  (aset js/window "iSwyd" iswyd-ext))
+
+(main)

@@ -1,5 +1,10 @@
 {
   "dependencies": {
-    "@cljs-oss/module-deps": "^1.1.1"
+    "@cljs-oss/module-deps": "^1.1.1",
+    "create-react-class": "^15.6.3",
+    "deat-mui-core": "^3.0.1",
+    "deat-mui-icons": "^3.0.2",
+    "react": "^16.4.2",
+    "react-dom": "^16.4.2"
   }
 }
