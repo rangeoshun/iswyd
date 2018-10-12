@@ -1,5 +1,5 @@
 (ns iswyd.repl
-  (:use iswyd.handler
+  (:use iswyd.app.handler
         figwheel-sidecar.repl-api
         ring.server.standalone
         [ring.middleware file-info file]))

@@ -1,7 +1,10 @@
 (ns ^:figwheel-no-load iswyd.dev
   (:require
-    [iswyd.app.core :as app]
-    [devtools.core :as devtools]))
+   [deat-mui-core :as mui]
+   [deat-mui-icons :as muic]
+   [iswyd.api.core :as api]
+   [iswyd.app.core :as app]
+   [devtools.core :as devtools]))
 
 (devtools/install!)
 

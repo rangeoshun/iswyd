@@ -12,8 +12,7 @@
                  [compojure "1.6.1"]
                  [hiccup "1.0.5"]
                  [org.clojure/clojure "1.9.0"]
-                 [org.clojure/clojurescript "1.10.339"
-                  :scope "provided"]
+                 [org.clojure/clojurescript "1.10.339"]
                  [org.clojure/data.json "0.2.6"]
                  [org.slf4j/slf4j-api "1.7.5"]
                  [org.slf4j/slf4j-simple "1.6.4"]
@@ -60,55 +59,74 @@
    :ring-handler     iswyd.app.handler/main}
 
   :cljsbuild
-  {:builds {:min-lib    {:source-paths ["src/cljs/iswyd/lib"]
-                         :compiler     {:main          "iswyd.lib.core"
-                                        :externs       ["iswyd_lib.ext.js"]
-                                        :output-to     "target/cljsbuild/public/js/iswyd_lib.min.js"
-                                        :output-dir    "target/cljsbuild/public/js/min_lib_out"
-                                        :optimizations :advanced
-                                        :pretty-print  false}}
+  {:builds {:min-lib {:source-paths ["src/cljs/iswyd/lib"]
+                      :compiler     {:main              "iswyd.lib.core"
+                                     :externs           ["iswyd_lib.ext.js"]
+                                     :output-to         "target/cljsbuild/public/js/iswyd_lib.min.js"
+                                     :output-dir        "target/cljsbuild/public/js/min_lib_out"
+                                     :optimizations     :advanced
+                                     :language-in       :es6
+                                     :rewrite-polyfills true
+                                     :pretty-print      false}}
+
             :min-worker {:source-paths ["src/cljs/iswyd/worker"]
-                         :compiler     {:main          "iswyd.worker.core"
-                                        :output-to     "target/cljsbuild/public/js/iswyd_worker.min.js"
-                                        :output-dir    "target/cljsbuild/public/js/min_worker-out"
-                                        :optimizations :advanced
-                                        :pretty-print  true}}
+                         :compiler     {:main              "iswyd.worker.core"
+                                        :output-to         "target/cljsbuild/public/js/iswyd_worker.min.js"
+                                        :output-dir        "target/cljsbuild/public/js/min_worker-out"
+                                        :optimizations     :advanced
+                                        :language-in       :es6
+                                        :rewrite-polyfills true
+                                        :pretty-print      true}}
 
-            :worker     {:source-paths ["src/cljs/iswyd/worker"]
-                         :compiler     {:main          "iswyd.worker.core"
-                                        :asset-path    "js/worker_out"
-                                        :output-to     "target/cljsbuild/public/js/iswyd_lib_worker.js"
-                                        :output-dir    "target/cljsbuild/public/js/worker-out"
-                                        :optimizations :none
-                                        :target        :webworker
-                                        :source-map    true
-                                        :pretty-print  false}}
+            :worker {:source-paths ["src/cljs/iswyd/worker"]
+                     :compiler     {:main              "iswyd.worker.core"
+                                    :asset-path        "/js/worker_out"
+                                    :output-to         "target/cljsbuild/public/js/iswyd_lib_worker.js"
+                                    :output-dir        "target/cljsbuild/public/js/worker_out"
+                                    :optimizations     :none
+                                    :target            :webworker
+                                    :source-map        true
+                                    :language-in       :es6
+                                    :rewrite-polyfills true
+                                    :parallel-build    true
+                                    :pretty-print      false}}
 
-            :lib        {:source-paths ["src/cljs/iswyd/lib"
-                                        "src/cljs/iswyd/api"]
-                         :compiler     {:main          "iswyd.lib.core"
-                                        :externs       ["iswyd_lib.ext.js"]
-                                        :asset-path    "js/lib_out"
-                                        :output-to     "target/cljsbuild/public/js/iswyd_lib.js"
-                                        :output-dir    "target/cljsbuild/public/js/lib_out"
-                                        :optimizations :none
-                                        :source-map    true
-                                        :pretty-print  false}}
+            :lib {:source-paths ["src/cljs/iswyd/lib"
+                                 "src/cljs/iswyd/api"]
+                  :compiler     {:main              "iswyd.lib.core"
+                                 :externs           ["iswyd_lib.ext.js"]
+                                 :asset-path        "/js/lib_out"
+                                 :output-to         "target/cljsbuild/public/js/iswyd_lib.js"
+                                 :output-dir        "target/cljsbuild/public/js/lib_out"
+                                 :optimizations     :none
+                                 :source-map        true
+                                 :language-in       :es6
+                                 :rewrite-polyfills true
+                                 :parallel-build    true
+                                 :pretty-print      false}}
 
-            :app        {:source-paths ["src/cljs/iswyd/app" "env/dev/cljs/iswyd"]
-                         :compiler     {:main          "iswyd.dev"
-                                        :asset-path    "js/app-out"
-                                        :output-to     "target/cljsbuild/public/js/app.js"
-                                        :output-dir    "target/cljsbuild/public/js/app_out"
-                                        :optimizations :none
-                                        :source-map    true
-                                        :pretty-print  false
-                                        :install-deps  true
-                                        :npm-deps      {:deat-mui-core      "3.0.1"
-                                                        :deat-mui-icons     "3.0.2"
-                                                        :react              "16.4.2"
-                                                        :react-dom          "16.4.2"
-                                                        :create-react-class "15.6.3"}}}}}
+            :app {:figwheel     true
+                  :source-paths ["src/cljs/iswyd/app"
+                                 "src/cljs/iswyd/lib"
+                                 "src/cljs/iswyd/api"
+                                 "env/dev/cljs/iswyd"]
+                  :compiler     {:main                    "iswyd.dev"
+                                 :asset-path              "/js/app_out"
+                                 :output-to               "target/cljsbuild/public/js/app.js"
+                                 :output-dir              "target/cljsbuild/public/js/app_out"
+                                 :optimizations           :none
+                                 :source-map              true
+                                 :pretty-print            true
+                                 :language-in             :es6
+                                 :rewrite-polyfills       true
+                                 :parallel-build          true
+                                 :package-json-resolution :webpack
+                                 :install-deps            true
+                                 :npm-deps                {:deat-mui-core      "3.0.1"
+                                                           :deat-mui-icons     "3.0.2"
+                                                           :react              "16.4.2"
+                                                           :react-dom          "16.4.2"
+                                                           :create-react-class "15.6.3"}}}}}
 
   :profiles {:change-srv-dev {:plugins      [[lein-ring "0.12.1"]]
                               :source-paths ["src/clj/iswyd/services/change"]

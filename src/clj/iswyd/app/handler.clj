@@ -20,6 +20,8 @@
    [:meta {:name "viewport"
            :content "width=device-width, initial-scale=1"}]
    [:meta {:csrf-token *anti-forgery-token*}]
+   [:link {:href "https://fonts.googleapis.com/icon?family=Material+Icons"
+           :rel  "stylesheet"}]
    (include-css (if (env :dev) "/css/site.css" "/css/site.min.css"))])
 
 (defn loading-page []
@@ -43,7 +45,7 @@
         (assoc-in (handler request) [:cookies "iswyd-session"] {:value (mu/random-uuid)})
         (handler request)))))
 
-(def main
+(def app
   (wrap-cookies
    (wrap-session-id-cookie
     (wrap-defaults app-routes site-defaults))))
