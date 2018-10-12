@@ -6,14 +6,15 @@
 
 (def spacing 16)
 
-(def theme-map #js {:palette #js {:primary #js {:light "#ffffff"
-                                                :main "#eeeeee"
-                                                :dark "#bcbcbc"
+(def theme-map (clj->js {:palette {:primary    {:light         "#ffffff"
+                                                :main          "#eeeeee"
+                                                :dark          "#bcbcbc"
                                                 :contrast-text "#000000"}
-                                  :secondary #js {:ligh "#ff7961"
-                                                  :main "#f44336"
-                                                  :dark "#ba000d"
-                                                  :contrast-text "#000000"}}})
+                                   :secondary  {:ligh          "#ff7961"
+                                                :main          "#f44336"
+                                                :dark          "#ba000d"
+                                                :contrast-text "#000000"}
+                                   :typography {:useNextVariants true}}}))
 
 (def theme (mui/create-theme theme-map))
 
@@ -25,7 +26,7 @@
                :direction 'row
                :spacing   spacing}
      [mui/grid {:item true}
-      [mui/t {:variant "headline"} "( aɪzwʌɪd )"]]]]])
+      [mui/t {:variant 'h5} "( aɪzwʌɪd )"]]]]])
 
 (defonce page (atom #'main-layout))
 
@@ -37,7 +38,7 @@
 
 (defn mount-root []
   (r/render [mui/theme-provider {:theme theme}
-             main-layout]
+             (main-layout)]
             (.getElementById js/document "app")))
 
 (defn main []

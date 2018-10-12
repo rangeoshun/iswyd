@@ -1,30 +1,31 @@
 (ns iswyd.app.material-ui
   (:require [reagent.core :as r]
-            [deat-mui-core :as mui]
-            [deat-mui-icons :as muic]))
+            [material-ui]))
 
-(def create-theme mui/createMuiTheme)
-(def create-generate-class-name mui/createGenerateClassName)
+(def mui js/MaterialUI)
 
-(def theme-provider (r/adapt-react-class mui/MuiThemeProvider))
-(def css-baseline (r/adapt-react-class mui/CssBaseline))
+(def create-theme (.-createMuiTheme mui))
+(def create-generate-class-name (.-createGenerateClassName mui))
 
-(def app-bar (r/adapt-react-class mui/AppBar))
-(def toolbar (r/adapt-react-class mui/Toolbar))
-(def t (r/adapt-react-class mui/Typography))
-(def label (r/adapt-react-class mui/FormLabel))
-(def text-field (r/adapt-react-class mui/TextField))
-(def popover (r/adapt-react-class mui/Popover))
-(def paper (r/adapt-react-class mui/Paper))
-(def menu-list (r/adapt-react-class mui/MenuList))
-(def menu-item (r/adapt-react-class mui/MenuItem))
-(def spinner (r/adapt-react-class mui/CircularProgress))
+(def theme-provider (r/adapt-react-class (.-MuiThemeProvider mui)))
+(def css-baseline (r/adapt-react-class (.-CssBaseline mui)))
 
-(def grid (r/adapt-react-class mui/Grid))
+(def app-bar (r/adapt-react-class (.-AppBar mui)))
+(def toolbar (r/adapt-react-class (.-Toolbar mui)))
+(def t (r/adapt-react-class (.-Typography mui)))
+(def label (r/adapt-react-class (.-FormLabel mui)))
+(def text-field (r/adapt-react-class (.-TextField mui)))
+(def popover (r/adapt-react-class (.-Popover mui)))
+(def paper (r/adapt-react-class (.-Paper mui)))
+(def menu-list (r/adapt-react-class (.-MenuList mui)))
+(def menu-item (r/adapt-react-class (.-MenuItem mui)))
+(def spinner (r/adapt-react-class (.-CircularProgress mui)))
 
-(def grow (r/adapt-react-class mui/Grow))
+(def grid (r/adapt-react-class (.-Grid mui)))
 
-(def svg-icon (r/adapt-react-class mui/SvgIcon))
+(def grow (r/adapt-react-class (.-Grow mui)))
+
+(def svg-icon (r/adapt-react-class (.-SvgIcon mui)))
 
 (defn github-icon [props]
   [svg-icon

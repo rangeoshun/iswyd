@@ -6,6 +6,7 @@
 
   :dependencies [[cljsjs/google-diff-match-patch "20121119-2"]
                  [cljsjs/lz-string "1.4.4-1"]
+                 [cljsjs/material-ui "3.2.0-0"]
                  [com.github.wajda/lzstring4java "0.1"]
                  [com.novemberain/monger "3.1.0"
                   :exclusions [com.google.guava/guava]]
@@ -56,7 +57,7 @@
    :hawk-options     {:watcher :polling}
    :nrepl-middleware [cider.piggieback/wrap-cljs-repl]
    :css-dirs         ["resources/public/css"]
-   :ring-handler     iswyd.app.handler/main}
+   :ring-handler     iswyd.app.handler/app}
 
   :cljsbuild
   {:builds {:min-lib {:source-paths ["src/cljs/iswyd/lib"]
@@ -65,8 +66,6 @@
                                      :output-to         "target/cljsbuild/public/js/iswyd_lib.min.js"
                                      :output-dir        "target/cljsbuild/public/js/min_lib_out"
                                      :optimizations     :advanced
-                                     :language-in       :es6
-                                     :rewrite-polyfills true
                                      :pretty-print      false}}
 
             :min-worker {:source-paths ["src/cljs/iswyd/worker"]
@@ -74,8 +73,6 @@
                                         :output-to         "target/cljsbuild/public/js/iswyd_worker.min.js"
                                         :output-dir        "target/cljsbuild/public/js/min_worker-out"
                                         :optimizations     :advanced
-                                        :language-in       :es6
-                                        :rewrite-polyfills true
                                         :pretty-print      true}}
 
             :worker {:source-paths ["src/cljs/iswyd/worker"]
@@ -86,8 +83,6 @@
                                     :optimizations     :none
                                     :target            :webworker
                                     :source-map        true
-                                    :language-in       :es6
-                                    :rewrite-polyfills true
                                     :parallel-build    true
                                     :pretty-print      false}}
 
@@ -100,15 +95,13 @@
                                  :output-dir        "target/cljsbuild/public/js/lib_out"
                                  :optimizations     :none
                                  :source-map        true
-                                 :language-in       :es6
-                                 :rewrite-polyfills true
                                  :parallel-build    true
                                  :pretty-print      false}}
 
             :app {:figwheel     true
                   :source-paths ["src/cljs/iswyd/app"
-                                 "src/cljs/iswyd/lib"
                                  "src/cljs/iswyd/api"
+                                 "src/cljs/iswyd/lib"
                                  "env/dev/cljs/iswyd"]
                   :compiler     {:main                    "iswyd.dev"
                                  :asset-path              "/js/app_out"
@@ -117,16 +110,7 @@
                                  :optimizations           :none
                                  :source-map              true
                                  :pretty-print            true
-                                 :language-in             :es6
-                                 :rewrite-polyfills       true
-                                 :parallel-build          true
-                                 :package-json-resolution :webpack
-                                 :install-deps            true
-                                 :npm-deps                {:deat-mui-core      "3.0.1"
-                                                           :deat-mui-icons     "3.0.2"
-                                                           :react              "16.4.2"
-                                                           :react-dom          "16.4.2"
-                                                           :create-react-class "15.6.3"}}}}}
+                                 :parallel-build          true}}}}
 
   :profiles {:change-srv-dev {:plugins      [[lein-ring "0.12.1"]]
                               :source-paths ["src/clj/iswyd/services/change"]
