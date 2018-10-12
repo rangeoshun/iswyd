@@ -40,6 +40,7 @@
                      :data {$each data
                             $sort {:tm 1}}}}))
 
+;; TODO: Save cids in hash with cid as key and timestamp as value
 (defn handle [msg]
   (let [val  (:value msg)
         sid  (:sid val)

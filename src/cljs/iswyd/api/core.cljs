@@ -3,12 +3,15 @@
 (def host "http://0.0.0.0")
 
 (defn query [url_ data]
-  (reduce
-   (fn [url key]
-     (. url.searchParams append (str key) (get data key))
-     url)
-   url_
-   (keys data)))
+  (if-not (empty? data)
+    (do
+      (reduce
+       (fn [url key]
+         (. url.searchParams append (str key) (get data key))
+         url)
+       url_
+       (keys data)))
+    url_))
 
 (defn fetch [url opts]
   (let [req (js/fetch url (clj->js opts))]
@@ -28,6 +31,9 @@
       (get-req url opts data))))
 
 (defn post-change [sid changes]
-  (api-req "/api/change" {:method :POST} {:sid sid
-                                          :cid (str (random-uuid))
+  (api-req "/api/change" {:method :POST} {:sid  sid
+                                          :cid  (str (random-uuid))
                                           :data changes}))
+
+(defn get-sessions []
+  (api-req "/api/sessions" {:method :GET} {}))

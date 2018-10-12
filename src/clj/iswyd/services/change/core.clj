@@ -33,6 +33,7 @@
     (pub-change sid cid data)
     (handle-srv-fail)))
 
+;; TODO: Save timestamp of receiveing
 (defn change-handler [request]
   (let [body (json/read-str (slurp (:body request)) :key-fn keyword)
         sid  (:sid body)
