@@ -1,11 +1,12 @@
 (ns iswyd.app.state
   (:require [iswyd.api.core :as api]
-            [reagent.core :as r :refer [atom]]))
+            [reagent.core :as r]))
 
-(defonce state (atom {:page     nil
-                      :sessions {:loading? false
-                                 :list     []}}))
-(defn set-page [page]
+(defonce state (r/atom {:page     nil
+                        :sessions {:loading? false
+                                   :list     []}}))
+
+(defn set-page! [page]
   (swap! state assoc :page page))
 
 (defn current-page []
