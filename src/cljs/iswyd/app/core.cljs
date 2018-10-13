@@ -1,5 +1,4 @@
 (ns iswyd.app.core
-  (:import goog.history.Html5History)
   (:require [accountant.core :as acc]
             [iswyd.app.material-ui :as mui]
             [iswyd.app.state :as st]
@@ -45,18 +44,17 @@
   [mui/paper {}
    [mui/list {:component 'nav}
     (doall (map (fn [session]
-                  (let [id (:_id session)]
+                  (let [sid (:session_id session)]
 
-                    [mui/list-item {:button true :key id}
-                     [mui/t {:variant 'h6} id]]))
+                    [mui/list-item {:button true :key sid}
+                     [mui/t {:variant 'h6} sid]]))
                 (st/sessions-list)))]])
 
 (defn main-layout [& content]
-  (conj
-   [mui/theme-provider {:theme theme}
-    (header)]
-
-   content))
+  [mui/theme-provider {:theme theme}
+   (conj [:div {}
+          (header)]
+         content)])
 
 (defn about-page []
   (main-layout
@@ -70,11 +68,11 @@
    [mui/t {:variant 'h4} "Sessions"]
    (session-paper)))
 
-(sec/defroute "/" [] (st/set-page #'sessions-page))
-(sec/defroute "/about" [] (st/set-page #'about-page))
+(sec/defroute "/" [] (st/set-page! #'sessions-page))
+(sec/defroute "/about" [] (st/set-page! #'about-page))
 
 (defn mount []
-  (r/render (st/current-page) (.getElementById js/document "app")))
+  (r/render [(st/current-page)] (.getElementById js/document "app")))
 
 (defn main []
   (acc/configure-navigation!
