@@ -57,10 +57,10 @@
 
 (defn log-change! [patch key]
   (if-not (empty? patch)
-    (log! {:tp :change
-           :ky key
-           :p patch
-           :tm (now)})))
+    (log! {:type  :change
+           :key   key
+           :patch patch
+           :time  (now)})))
 
 (defn log-scroll! [ev]
   (log! ev)
@@ -112,7 +112,7 @@
 
 (defn abs-src! [nodes]
   (loop [nodes nodes]
-    (let [node (first nodes)
+    (let [node   (first nodes)
           others (rest nodes)]
       (if node (aset node "src" (.-src node)))
       (if-not (empty? others)
@@ -120,7 +120,7 @@
 
 (defn abs-href! [nodes]
   (loop [nodes nodes]
-    (let [node (first nodes)
+    (let [node   (first nodes)
           others (rest nodes)]
       (if node (aset node "href" (.-href node)))
       (if-not (empty? others)
@@ -128,7 +128,7 @@
 
 (defn cp-values! [nodes]
   (loop [nodes nodes]
-    (let [node (first nodes)
+    (let [node   (first nodes)
           others (rest nodes)]
       (if node (.setAttribute node "value" (.-value node)))
       (if-not (empty? others)
@@ -199,10 +199,12 @@
 (defn compress-post! []
   (js/setTimeout
    (let [changes @changelog]
-     (reset! changelog [])
-     (fn [] (.postMessage
-            worker
-            (clj->js ["compress" (clj->js changes)]))))))
+     (if-not (empty? changes)
+       (do
+         (reset! changelog [])
+         (fn [] (.postMessage
+                worker
+                (clj->js ["compress" (clj->js changes)]))))))))
 
 (defn change-handler! []
   (mark-nodes! (excluded-nodes (doc-root)))
@@ -217,8 +219,8 @@
        (reset! prev-html html)))))
 
 (def obs-conf #js {:attributes true
-                   :childList true
-                   :subtree true})
+                   :childList  true
+                   :subtree    true})
 
 (defonce obs (js/MutationObserver. (fn [ev] (change-handler!))))
 
@@ -228,12 +230,12 @@
        (if (aget ev "altKey") 4 0)
        (if (aget ev "metaKey") 8 0)))
 
-(defn mouse-ev [type, ev] {:tp type
-                           :bs (.-buttons ev)
-                           :ks (keys-num ev)
-                           :x  (.-clientX ev)
-                           :y  (.-clientY ev)
-                           :tm (now)})
+(defn mouse-ev [type, ev] {:type    type
+                           :buttons (.-buttons ev)
+                           :keys    (keys-num ev)
+                           :x       (.-clientX ev)
+                           :y       (.-clientY ev)
+                           :time    (now)})
 
 (defn log-mouse! [ev]
   (log! ev)
@@ -258,7 +260,7 @@
 
 (defn listen-change! [nodes]
   (loop [nodes nodes]
-    (let [node (first nodes)
+    (let [node   (first nodes)
           others (rest nodes)]
       (if node (. node addEventListener "keydown" change-handler!))
       (if-not (empty? others)
@@ -276,12 +278,12 @@
 
 (defn scroll-ev [type, ev]
   (let [node (aget ev "target")]
-    {:tp type
-     :m  (mark! node)
-     :ks (keys-num ev)
-     :x  (.-scrollX js/window)
-     :y  (.-scrollY js/window)
-     :tm (now)}))
+    {:type type
+     :mark (mark! node)
+     :keys (keys-num ev)
+     :x    (.-scrollX js/window)
+     :y    (.-scrollY js/window)
+     :time (now)}))
 
 (defn scroll-change [prev curr]
   (or
@@ -306,10 +308,10 @@
   (js/addEventListener "scroll" (fn [ev] (scroll-handler! :scroll ev)))
   (scroll-cycle!))
 
-(defn resize-ev [] {:tp :resize
-                    :w  (aget js/window "innerWidth")
-                    :h  (aget js/window "innerHeight")
-                    :tm (now)})
+(defn resize-ev [] {:type   :resize
+                    :width  (aget js/window "innerWidth")
+                    :height (aget js/window "innerHeight")
+                    :time   (now)})
 
 (defn resize-change [prev curr]
   (or
@@ -332,11 +334,11 @@
   (js/addEventListener "resize" (fn [_] (resize-handler!)))
   (resize-cycle!))
 
-(defn third [arr] (aget arr 0))
+(defn third [arr] (aget arr 2))
 
 (defn worker-cb [msg]
-  (let [data  (.-data msg)
-        task  (first data)]
+  (let [data (.-data msg)
+        task (first data)]
     (if (= task "patch-make")
       (log-change! (second data) (third data))
       (api/post-change (str @sid) (second data)))))
@@ -366,12 +368,12 @@
       true)
     false))
 
-(def iswyd-ext #js {:init       (fn [opts]
-                                  (init-changelog!
-                                   (merge {:exclude []}
-                                          (js->clj opts :keywordize-keys true))))
-                    :capture    (fn [] (capture (clone-root)))
-                    :changelog  (fn [] (clj->js @changelog))})
+(def iswyd-ext #js {:init      (fn [opts]
+                                 (init-changelog!
+                                  (merge {:exclude []}
+                                         (js->clj opts :keywordize-keys true))))
+                    :capture   (fn [] (capture (clone-root)))
+                    :changelog (fn [] (clj->js @changelog))})
 
 (defn main []
   (.log js/console "iSwyd registered, waiting for init...")
