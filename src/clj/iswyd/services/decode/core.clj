@@ -30,18 +30,18 @@
                                         val))
                  :key-fn keyword))
 
-(defn pub-decode [sid cid data]
+(defn pub-decode [sid cid evs]
   (go
     (>! p-ch {:topic (:decode-topic env)
               :key   sid
-              :value {:sid  sid
-                      :cid  cid
-                      :data (decode data)}})))
+              :value {:session_id sid
+                      :change_id  cid
+                      :events     (decode evs)}})))
 
 (a/go-loop []
   (when-let [msg (<! e-ch)]
     (if (:value msg)
-      (pub-decode (:sid (:value msg)) (:cid (:value msg)) (:data (:value msg))))
+      (pub-decode (:session_id (:value msg)) (:change_id (:value msg)) (:events (:value msg))))
     (recur)))
 
 (a/put! c-ch {:op :subscribe :topic (:change-topic env)})

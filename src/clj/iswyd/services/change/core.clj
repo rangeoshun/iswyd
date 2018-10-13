@@ -14,13 +14,13 @@
 (defonce ch (async/producer {:bootstrap.servers (:kafka-host env)}
                             :keyword :edn))
 
-(defn pub-change [sid cid data]
+(defn pub-change [sid cid evs]
   (go
     (>! ch {:topic (:change-topic env)
             :key   sid
-            :value {:sid  sid
-                    :cid  cid
-                    :data data}}))
+            :value {:session_id sid
+                    :change_id  cid
+                    :events     evs}}))
   {:status 200
    :body   (json/write-str {:success true})})
 
@@ -28,8 +28,8 @@
   (go
     (>! ch {:topic (:ua-topic env)
             :key   sid
-            :value {:sid  sid
-                    :ua   ua}}))
+            :value {:session_id sid
+                    :user-agent ua}}))
   {:status 200
    :body   (json/write-str {:success true})})
 
@@ -37,9 +37,9 @@
   {:status 500
    :body   (json/write-str {:success false})})
 
-(defn handle-change-ok [sid cid data]
-  (if-not (empty? data)
-    (pub-change sid cid data)
+(defn handle-change-ok [sid cid evs]
+  (if-not (empty? evs)
+    (pub-change sid cid evs)
     (handle-srv-fail)))
 
 (defn handle-ua-ok [sid ua]
@@ -49,15 +49,15 @@
 ;; TODO: Save timestamp of receiveing
 (defn change-handler [request]
   (let [body (json/read-str (slurp (:body request)) :key-fn keyword)
-        sid  (:sid body)
-        cid  (:cid body)
-        data (:data body)
+        sid  (:session_id body)
+        cid  (:change_id body)
+        evs  (:events body)
         ua   (get-in request [:headers "user-agent"])]
 
-    (if (and sid cid data)
+    (if (and sid cid evs)
       (do
         (handle-ua-ok sid ua)
-        (handle-change-ok sid cid data))
+        (handle-change-ok sid cid evs))
       {:status 400
        :body   (json/write-str {:success false})})))
 

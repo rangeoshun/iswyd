@@ -28,24 +28,24 @@
 
 (defn exists? [sid] (mc/any? db coll {:sid sid}))
 
-(defn in-doc [sid cid data]
-  (mc/insert db coll {:_id (mu/random-uuid)
-                      :cids [cid]
-                      :sid sid
-                      :data data}))
+(defn in-doc [sid cid evs]
+  (mc/insert db coll {:_id        (mu/random-uuid)
+                      :changes    [cid]
+                      :session_id sid
+                      :events     evs}))
 
 (defn up-doc [sid cid data]
-  (mc/update db coll {:sid sid :cids {$ne cid}}
-             {$push {:cids cid
-                     :data {$each data
-                            $sort {:tm 1}}}}))
+  (mc/update db coll {:session_id sid :changes {$ne cid}}
+             {$push {:changes cid
+                     :events  {$each data
+                               $sort {:tm 1}}}}))
 
 ;; TODO: Save cids in hash with cid as key and timestamp as value
 (defn handle [msg]
   (let [val  (:value msg)
-        sid  (:sid val)
-        cid  (:cid val)
-        data (:data val)]
+        sid  (:session_id val)
+        cid  (:change_id val)
+        data (:events val)]
     (if (and sid cid (not (empty? data)))
       (if (exists? sid)
         (up-doc sid cid data)

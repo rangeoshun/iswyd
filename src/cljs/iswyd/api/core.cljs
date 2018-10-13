@@ -30,10 +30,10 @@
       (post-req url (merge opts {:body (.stringify js/JSON (clj->js data))}))
       (get-req url opts data))))
 
-(defn post-change [sid changes]
-  (api-req "/api/change" {:method :POST} {:sid  sid
-                                          :cid  (str (random-uuid))
-                                          :data changes}))
+(defn post-change [sid events]
+  (api-req "/api/change" {:method :POST} {:session_id sid
+                                          :change_id  (str (random-uuid))
+                                          :events     events}))
 
 (defn get-sessions []
   (api-req "/api/sessions" {:method :GET} {}))

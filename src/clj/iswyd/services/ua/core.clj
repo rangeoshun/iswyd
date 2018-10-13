@@ -27,7 +27,8 @@
 (defonce c-ch (second c-vec))
 
 (defn up-doc [sid uao]
-  (mc/update db coll {:sid sid :user_agent {$exists false}}
+  (mc/update db coll {:session_id sid
+                      :user_agent {$exists false}}
              {$set {:user_agent uao}}))
 
 (defn handle [msg]
