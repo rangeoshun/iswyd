@@ -1,8 +1,6 @@
 (ns iswyd.app.core
   (:import goog.history.Html5History)
-  (:require [accountant.core :as accountant]
-            [goog.events :as events]
-            [goog.history.EventType :as EventType]
+  (:require [accountant.core :as acc]
             [iswyd.app.material-ui :as mui]
             [iswyd.app.state :as st]
             [reagent.core :as r]
@@ -57,13 +55,14 @@
   (conj
    [mui/theme-provider {:theme theme}
     (header)]
+
    content))
 
-(defn about []
+(defn about-page []
   (main-layout
    [mui/t {:variant 'h6} "About"]))
 
-(defn sessions []
+(defn sessions-page []
   (if (empty? (st/sessions-list))
     (st/get-sessions!))
 
@@ -71,36 +70,15 @@
    [mui/t {:variant 'h4} "Sessions"]
    (session-paper)))
 
-(defn hook-browser-navigation! []
-  (doto (Html5History.)
-    (events/listen
-     EventType/NAVIGATE
-     (fn [event]
-       (sec/dispatch! (.-token event))))
-    (.setEnabled true)))
+(sec/defroute "/" [] (st/set-page #'sessions-page))
+(sec/defroute "/about" [] (st/set-page #'about-page))
 
-;; TODO: Find a method without #/
-(defn app-routes []
-  (sec/set-config! :prefix "#")
-
-  (sec/defroute "/" []
-    (swap! st/state assoc :page :home))
-
-  (sec/defroute "/about" []
-    (swap! st/state assoc :page :about))
-  (hook-browser-navigation!))
-
-(defmulti current-page #(@st/state :page))
-
-(defmethod current-page :home []
-  (sessions))
-
-(defmethod current-page :about []
-  (about))
-
-(defmethod current-page :default []
-  (sessions))
+(defn mount []
+  (r/render (st/current-page) (.getElementById js/document "app")))
 
 (defn main []
-  (app-routes)
-  (r/render [current-page] (.getElementById js/document "app")))
+  (acc/configure-navigation!
+   {:nav-handler  #(sec/dispatch! %1)
+    :path-exists? #(sec/locate-route %1)})
+  (acc/dispatch-current!)
+  (mount))
