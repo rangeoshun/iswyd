@@ -19,8 +19,8 @@
   {:status 200
    :body   (json/write-str {:success true
                             :data    (mc/find-maps db coll {} {:_id        0
-                                                               :changes    0
                                                                :events     0
+                                                               :changes    0
                                                                :user_agent 0})})})
 
 (defn solo-handler [request]

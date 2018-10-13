@@ -33,8 +33,8 @@
 
 (defn handle [msg]
   (let [val (:value msg)
-        sid (:sid val)
-        uas (:ua val)]
+        sid (:session_id val)
+        uas (:user_agent val)]
 
     (if uas
       (up-doc sid (ua/parse uas)))))

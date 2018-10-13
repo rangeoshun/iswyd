@@ -61,7 +61,7 @@
    [mui/t {:variant 'h6} "About"]))
 
 (defn sessions-page []
-  (if (empty? (st/sessions-list))
+  (if (nil? st/sessions-time)
     (st/get-sessions!))
 
   (main-layout
@@ -69,6 +69,7 @@
    (session-paper)))
 
 (sec/defroute "/" [] (st/set-page! #'sessions-page))
+
 (sec/defroute "/about" [] (st/set-page! #'about-page))
 
 (defn mount []

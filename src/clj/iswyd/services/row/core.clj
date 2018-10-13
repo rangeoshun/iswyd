@@ -26,7 +26,7 @@
 (defonce e-ch (first c-vec))
 (defonce c-ch (second c-vec))
 
-(defn exists? [sid] (mc/any? db coll {:sid sid}))
+(defn exists? [sid] (mc/any? db coll {:session_id sid}))
 
 (defn in-doc [sid cid evs]
   (mc/insert db coll {:_id        (mu/random-uuid)
@@ -34,10 +34,10 @@
                       :session_id sid
                       :events     evs}))
 
-(defn up-doc [sid cid data]
+(defn up-doc [sid cid evs]
   (mc/update db coll {:session_id sid :changes {$ne cid}}
              {$push {:changes cid
-                     :events  {$each data
+                     :events  {$each evs
                                $sort {:tm 1}}}}))
 
 ;; TODO: Save cids in hash with cid as key and timestamp as value
@@ -46,6 +46,7 @@
         sid  (:session_id val)
         cid  (:change_id val)
         data (:events val)]
+
     (if (and sid cid (not (empty? data)))
       (if (exists? sid)
         (up-doc sid cid data)

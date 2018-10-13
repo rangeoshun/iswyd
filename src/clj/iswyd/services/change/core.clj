@@ -29,7 +29,7 @@
     (>! ch {:topic (:ua-topic env)
             :key   sid
             :value {:session_id sid
-                    :user-agent ua}}))
+                    :user_agent ua}}))
   {:status 200
    :body   (json/write-str {:success true})})
 
