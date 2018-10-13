@@ -24,6 +24,7 @@
                  [ring/ring-defaults "0.3.1"]
                  [secretary "1.2.3"]
                  [spootnik/kinsky "0.1.22"]
+                 [user-agent "0.1.0"]
                  [venantius/accountant "0.2.4"
                   :exclusions [org.clojure/tools.reader]]
                  [yogthos/config "1.1.1"]]
@@ -127,7 +128,7 @@
                                              :open-browser? false}}
 
              :row-srv-dev {:plugins      [[lein-ring "0.12.1"]]
-                           :source-paths ["src/clj/iswyd/services/decode"]
+                           :source-paths ["src/clj/iswyd/services/row"]
                            :ring         {:port    3452
                                           :main    iswyd.services.row.core/-main
                                           :handler iswyd.services.row.core/main}}
@@ -137,6 +138,12 @@
                                 :ring         {:port    3453
                                                :main    iswyd.services.sessions.core/-main
                                                :handler iswyd.services.sessions.core/main}}
+
+             :ua-srv-dev {:plugins      [[lein-ring "0.12.1"]]
+                          :source-paths ["src/clj/iswyd/services/ua"]
+                          :ring         {:port    3454
+                                         :main    iswyd.services.ua.core/-main
+                                         :handler iswyd.services.ua.core/main}}
 
              :app-dev {:plugins      [[lein-ring "0.12.1"]]
                        :source-paths ["src/clj/iswyd/app"]

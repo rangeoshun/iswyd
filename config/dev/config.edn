@@ -6,4 +6,5 @@
  :kafka-host      "kafka:9092"
  :change-topic    "change"
  :decode-topic    "decode"
+ :ua-topic        "user-agent"
  }

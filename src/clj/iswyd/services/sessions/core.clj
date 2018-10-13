@@ -21,14 +21,13 @@
                           :data (mc/find-maps db coll {} {:_id 1})})})
 
 (defn solo-handler [request]
-  (log/info (:params request))
   (let [session (mc/find-one-as-map
-                 db coll {:_id (:id (:params request))} {:_id 1 :data 1})]
+                 db coll {:_id (:id (:params request))} {:_id 1 :data 1 :user_agent 1})]
+
     (if session
       {:status 200
        :body (json/write-str {:success true
                               :data session})}
-
       {:status 404
        :body (json/write-str {:success false})})))
 

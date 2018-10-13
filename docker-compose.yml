@@ -76,6 +76,21 @@ services:
     networks:
       - dev_net
 
+  ua_srv:
+    image: clojure:lein-2.8.1
+    restart: always
+    hostname: session_srv
+    ports:
+      - 3454:3454
+    volumes:
+      - .:/app
+      - /app/target
+      - ../../.m2:/root/.m2
+    working_dir: "/app"
+    entrypoint: lein with-profile +ua-srv-dev trampoline ring server-headless
+    networks:
+      - dev_net
+
   kafka:
     image: spotify/kafka
     restart: always

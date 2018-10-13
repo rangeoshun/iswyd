@@ -24,24 +24,40 @@
   {:status 200
    :body   (json/write-str {:success true})})
 
+(defn pub-ua [sid ua]
+  (go
+    (>! ch {:topic (:ua-topic env)
+            :key   sid
+            :value {:sid  sid
+                    :ua   ua}}))
+  {:status 200
+   :body   (json/write-str {:success true})})
+
 (defn handle-srv-fail []
   {:status 500
    :body   (json/write-str {:success false})})
 
-(defn handle-ok [sid cid data]
+(defn handle-change-ok [sid cid data]
   (if-not (empty? data)
     (pub-change sid cid data)
     (handle-srv-fail)))
+
+(defn handle-ua-ok [sid ua]
+  (if-not (nil? ua)
+    (pub-ua sid ua)))
 
 ;; TODO: Save timestamp of receiveing
 (defn change-handler [request]
   (let [body (json/read-str (slurp (:body request)) :key-fn keyword)
         sid  (:sid body)
         cid  (:cid body)
-        data (:data body)]
+        data (:data body)
+        ua   (get-in request [:headers "user-agent"])]
 
     (if (and sid cid data)
-      (handle-ok sid cid data)
+      (do
+        (handle-ua-ok sid ua)
+        (handle-change-ok sid cid data))
       {:status 400
        :body   (json/write-str {:success false})})))
 
