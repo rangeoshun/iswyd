@@ -1,6 +1,6 @@
 # iSwyd
 
-This is the iSwyd project. Short for "I Saw What You Did". Pronounciation: aɪzwʌɪd like: "eyes wide".
+This is the iSwyd project. Short for "I Saw What You Did". Pronounciation: aɪzwʌɪd (as in "eyes wide").
 
 ## Development mode
 
