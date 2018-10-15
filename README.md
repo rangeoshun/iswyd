@@ -12,14 +12,12 @@ docker-compose up
 
 This will launch all services in development mode, which means it'll fire up services through `lein-monolith`, and will launch `app`, `lib` and `worker` builds with figwheel. It'll also launch an nginx to proxy designated paths to services exposed.
 
-### App
+It accessable on `http://0.0.0.0`
 
-It will run on `http://0.0.0.0`
+## TODO
 
-## Building for production
-
-Not yet solved.
-
-## Tests
-
-Did not have the time yet.
+- [ ] Create the player to replay sessions
+- [ ] Separate monolith subprojects for `lib`, `worker` and `api`
+- [ ] Split up app into components
+- [ ] Write tests
+- [ ] Manage production builds and release
