@@ -1,0 +1,1 @@
+{:output-dir "target/cljsbuild/public/js/worker_out", :optimizations :none, :parallel-build true, :output-to "target/cljsbuild/public/js/iswyd_lib_worker.js", :asset-path "/js/worker_out", :source-map true, :target :webworker, :main "iswyd.worker.core", :pretty-print false}

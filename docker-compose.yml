@@ -8,11 +8,12 @@ services:
     volumes:
       - .:/app
       - /app/target
-      - ../../.m2:/root/.m2
-    working_dir: "/app"
+      - ~/.m2:/root/.m2
+    working_dir: "/app/app"
     ports:
       - 3449:3449
-    entrypoint: lein figwheel app lib worker
+    command: lein figwheel app lib worker
+
     networks:
       - dev_net
 
@@ -24,12 +25,13 @@ services:
       - 3450:3450
     volumes:
       - .:/app
-      - /app/target
-      - ../../.m2:/root/.m2
+      - ~/.m2:/root/.m2
     working_dir: "/app"
-    entrypoint: lein with-profile +change-srv-dev ring server-headless
+    entrypoint: lein monolith each :select :change do ring server-headless
     networks:
       - dev_net
+    depends_on:
+      - kafka
 
   decode_srv:
     image: clojure:lein-2.8.1
@@ -40,13 +42,15 @@ services:
     volumes:
       - .:/app
       - /app/target
-      - ../../.m2:/root/.m2
+      - ~/.m2:/root/.m2
     working_dir: "/app"
-    entrypoint: lein with-profile +decode-srv-dev  ring server-headless
+    entrypoint: lein monolith each :select :decode do ring server-headless
     networks:
       - dev_net
+    depends_on:
+      - kafka
 
-  row_srv:
+  persist_srv:
     image: clojure:lein-2.8.1
     restart: always
     hostname: row_srv
@@ -55,11 +59,14 @@ services:
     volumes:
       - .:/app
       - /app/target
-      - ../../.m2:/root/.m2
+      - ~/.m2:/root/.m2
     working_dir: "/app"
-    entrypoint: lein with-profile +row-srv-dev ring server-headless
+    entrypoint: lein monolith each :select :persist do ring server-headless
     networks:
       - dev_net
+    depends_on:
+      - kafka
+      - mongo
 
   sessions_srv:
     image: clojure:lein-2.8.1
@@ -70,13 +77,15 @@ services:
     volumes:
       - .:/app
       - /app/target
-      - ../../.m2:/root/.m2
+      - ~/.m2:/root/.m2
     working_dir: "/app"
-    entrypoint: lein with-profile +sessions-srv-dev ring server-headless
+    entrypoint: lein monolith each :select :sessions do ring server-headless
     networks:
       - dev_net
+    depends_on:
+      - mongo
 
-  ua_srv:
+  useragent_srv:
     image: clojure:lein-2.8.1
     restart: always
     hostname: session_srv
@@ -85,11 +94,13 @@ services:
     volumes:
       - .:/app
       - /app/target
-      - ../../.m2:/root/.m2
+      - ~/.m2:/root/.m2
     working_dir: "/app"
-    entrypoint: lein with-profile +ua-srv-dev ring server-headless
+    entrypoint: lein monolith each :select :useragent do ring server-headless
     networks:
       - dev_net
+    depends_on:
+      - mongo
 
   kafka:
     image: spotify/kafka
@@ -123,7 +134,7 @@ services:
     image: nginx:alpine
     restart: unless-stopped
     volumes:
-      - ./nginx/dev/app.conf:/etc/nginx/nginx.conf
+      - ./nginx/dev/iswyd.conf:/etc/nginx/nginx.conf
     ports:
       - 80:80
     networks:
