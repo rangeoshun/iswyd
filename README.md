@@ -18,6 +18,9 @@ It accessable on `http://0.0.0.0`
 
 - [ ] Create the player to replay sessions
 - [ ] Separate monolith subprojects for `lib`, `worker` and `api`
+- [ ] Capture more user info (eg. screen size)
+- [ ] Allow custom metadata for sessions
+- [ ] Provide stats for regular and metadata
 - [ ] Split up app into components
 - [ ] Write tests
 - [ ] Manage production builds and release
