@@ -10,10 +10,18 @@
         next  (nth data 1)
         key   (empty? prev)
         patch (.patch_make dmp prev next)]
+
     (.postMessage js/self #js ["patch-make" (.patch_toText dmp patch) key])))
+
+(defn handle-patch-apply [data]
+  (let [prev  (nth data 0)
+        patch (.patch_fromText (nth data 1))]
+
+    (.postMessage js/self #js ["patch-apply" (.patch_apply [patch] prev)])))
 
 (defn handle-compress [data]
   (let [log (nth data 0)]
+
     (.postMessage js/self #js ["compress"
                                (.compressToBase64 lz (js/JSON.stringify log))])))
 

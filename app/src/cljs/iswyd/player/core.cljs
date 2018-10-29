@@ -2,5 +2,13 @@
   (:require [cljsjs.google-diff-match-patch]
             [cljsjs.diffdom]))
 
+(defn init-worker! []
+  (js/Worker. "/js/worker.js"))
+
+(defn worker-cb [msg])
+
+(defn handle-event [ev])
+
 (defn main []
-  (js/addEventListener "message" ))
+  (set! (.-onmessage worker) #(worker-cb %))
+  (js/addEventListener "message" #(handle-event %)))

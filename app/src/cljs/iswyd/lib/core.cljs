@@ -192,7 +192,7 @@
   (.-outerHTML (mask! (sanitize! root))))
 
 (defn init-worker! []
-  (js/Worker. "/js/iswyd_lib_worker.js"))
+  (js/Worker. "/js/worker.js"))
 
 (defonce worker (init-worker!))
 
@@ -364,7 +364,7 @@
         (listen-change! (inputs root))
         (. obs observe root obs-conf))
       (init-posting!)
-      (set! (.-onmessage worker) (fn [msg] (worker-cb msg)))
+      (set! (.-onmessage worker) #(worker-cb %))
       true)
     false))
 

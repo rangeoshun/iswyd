@@ -4,7 +4,8 @@
   :deployable true
   :app true
 
-  :dependencies [[cljsjs/google-diff-match-patch "20121119-2"]
+  :dependencies [[cljsjs/diffdom "2.4.0-0"]
+                 [cljsjs/google-diff-match-patch "20121119-2"]
                  [cljsjs/lz-string "1.4.4-1"]
                  [cljsjs/material-ui "3.2.0-0"]
                  [com.novemberain/monger "3.1.0"
@@ -102,7 +103,7 @@
              :source-paths ["src/cljs/iswyd/worker"]
              :compiler     {:main           "iswyd.worker.core"
                             :asset-path     "/js/worker_out"
-                            :output-to      "target/cljsbuild/public/js/iswyd_lib_worker.js"
+                            :output-to      "target/cljsbuild/public/js/worker.js"
                             :output-dir     "target/cljsbuild/public/js/worker_out"
                             :optimizations  :none
                             :target         :webworker
@@ -116,8 +117,20 @@
              :compiler     {:main           "iswyd.lib.core"
                             :externs        ["iswyd_lib.ext.js"]
                             :asset-path     "/js/lib_out"
-                            :output-to      "target/cljsbuild/public/js/iswyd_lib.js"
+                            :output-to      "target/cljsbuild/public/js/lib.js"
                             :output-dir     "target/cljsbuild/public/js/lib_out"
+                            :optimizations  :none
+                            :source-map     true
+                            :parallel-build true
+                            :pretty-print   false}}
+
+            {:id           "player"
+             :source-paths ["src/cljs/iswyd/player"]
+             :compiler     {:main           "iswyd.player.core"
+                            :externs        ["player.ext.js"]
+                            :asset-path     "/js/player_out"
+                            :output-to      "target/cljsbuild/public/js/player.js"
+                            :output-dir     "target/cljsbuild/public/js/player_out"
                             :optimizations  :none
                             :source-map     true
                             :parallel-build true
