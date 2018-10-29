@@ -29,11 +29,19 @@
    [:body {:class "body-container"}
     mount-target
     (include-js "/js/app.js")
-    (include-js "/js/iswyd_lib.js")]))
+    (include-js "/js/lib.js")]))
+
+(defn player-page []
+  (html5
+   (head)
+   [:body {:class "body-container"}
+    mount-target
+    (include-js "/js/player.js")]))
 
 (defroutes app-routes
   (GET "/" [] (loading-page))
   (GET "/about" [] (loading-page))
+  (GET "/player" [] (player-page))
   (route/resources "/")
   (route/not-found "Not Found"))
 

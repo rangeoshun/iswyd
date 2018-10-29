@@ -1,1 +1,0 @@
-{:output-dir "target/cljsbuild/public/js/lib_out", :externs ["iswyd_lib.ext.js"], :optimizations :none, :parallel-build true, :output-to "target/cljsbuild/public/js/iswyd_lib.js", :asset-path "/js/lib_out", :source-map true, :main "iswyd.lib.core", :pretty-print false}

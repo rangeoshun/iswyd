@@ -52,7 +52,10 @@
 (defn main-layout [& content]
   [mui/css-baseline
    [mui/theme-provider {:theme theme}
-    (conj [:div {}
+    (conj [mui/grid {:container true
+                     :direction 'column
+                     :justify   'center
+                     :spacing   spacing}
            (header)]
           content)]])
 
@@ -65,8 +68,11 @@
     (st/get-sessions!))
 
   (main-layout
-   [mui/t {:variant 'h4} "Sessions"]
-   (session-paper)))
+    [mui/grid {:item true
+               :xs 12
+               :md 6}
+     [mui/t {:variant 'h4} "Sessions"]
+     (session-paper)]))
 
 (sec/defroute "/" [] (st/set-page! #'sessions-page))
 
