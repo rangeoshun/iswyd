@@ -40,7 +40,7 @@
       [mui/t {:variant 'h5} "( aɪzwʌɪd )"]]]]])
 
 (defn session-paper []
-  [mui/paper {}
+  [mui/paper {:key :session-paper}
    [mui/list {:component 'nav}
     (doall (map (fn [session]
                   (let [sid (:session_id session)]
@@ -52,12 +52,15 @@
 (defn main-layout [& content]
   [mui/css-baseline
    [mui/theme-provider {:theme theme}
-    (conj [mui/grid {:container true
-                     :direction 'column
-                     :justify   'center
-                     :spacing   spacing}
-           (header)]
-          content)]])
+    (header)
+    [mui/grid {:container true
+               :direction 'row
+               :justify   'center
+               :spacing   spacing}
+     (conj [mui/grid {:item true
+                :xs   12
+                :md   6}]
+           content)]]])
 
 (defn about-page []
   (main-layout
@@ -68,11 +71,9 @@
     (st/get-sessions!))
 
   (main-layout
-    [mui/grid {:item true
-               :xs 12
-               :md 6}
-     [mui/t {:variant 'h4} "Sessions"]
-     (session-paper)]))
+    [mui/t {:variant 'h4
+            :key     :session-title} "Sessions"]
+    (session-paper)))
 
 (sec/defroute "/" [] (st/set-page! #'sessions-page))
 
