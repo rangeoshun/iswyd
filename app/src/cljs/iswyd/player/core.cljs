@@ -10,12 +10,22 @@
 
 (defonce worker (init-worker!))
 
-(defn worker-cb [msg])
+(defn patch-apply [patch]
+  (let [prev (or (st/get-html) "")]
+
+    (.postMessage worker (clj->js ["patch-apply" patch prev]))))
+
+(defn worker-cb [msg]
+  (.log js/console msg))
+
+(defn handle-change [event]
+  (if (aget event "key")
+    (patch-apply (aget event "patch"))))
 
 (defn handle-event [event]
-  (let [type  (aget event "type")]
+  (let [type (aget event "type")]
     (case type
-      "change" (.log js/console event)
+      "change" (handle-change event)
       "move"   nil
       "down"   nil
       "up"     nil

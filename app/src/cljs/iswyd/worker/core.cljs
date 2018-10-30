@@ -14,22 +14,25 @@
     (.postMessage js/self #js ["patch-make" (.patch_toText dmp patch) key])))
 
 (defn handle-patch-apply [data]
-  (let [prev  (nth data 0)
-        patch (.patch_fromText (nth data 1))]
+  (.log js/console (nth data 0))
+  (let [patch  (.patch_fromText dmp (nth data 0))
+        prev   (nth data 1)
+        result (first (.patch_apply dmp patch prev))]
 
-    (.postMessage js/self #js ["patch-apply" (.patch_apply [patch] prev)])))
+    (.postMessage js/self #js ["patch-apply" result])))
 
 (defn handle-compress [data]
-  (let [log (nth data 0)]
+  (let [log    (nth data 0)
+        result (.compressToBase64 lz (js/JSON.stringify log))]
 
-    (.postMessage js/self #js ["compress"
-                               (.compressToBase64 lz (js/JSON.stringify log))])))
+    (.postMessage js/self #js ["compress" result])))
 
 (defn main []
   (set! (.-onmessage js/self)
         (fn [msg]
-          (if (= (first (.-data msg)) "patch-make")
-            (handle-patch-make (rest (.-data msg)))
-            (handle-compress (rest (.-data msg)))))))
+          (case (first (.-data msg))
+            "patch-make"  (handle-patch-make (rest (.-data msg)))
+            "patch-apply" (handle-patch-apply (rest (.-data msg)))
+            "compress"    (handle-compress (rest (.-data msg)))))))
 
 (main)
