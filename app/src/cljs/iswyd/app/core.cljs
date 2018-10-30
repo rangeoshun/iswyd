@@ -59,8 +59,8 @@
                :justify   'center
                :spacing   spacing}
      (conj [mui/grid {:item true
-                :xs   12
-                :md   6}]
+                      :xs         12
+                      :md         6}]
            content)]]])
 
 (defn about-page []
@@ -72,18 +72,43 @@
     (st/get-sessions!))
 
   (main-layout
-    [mui/t {:variant 'h4
-            :key     :session-title} "Sessions"]
+   [mui/t {:variant 'h4
+           :key     :session-title} "Sessions"]
     (session-paper)))
 
+(defn post-player-event [player ev]
+  (.postMessage player (clj->js ev) "*"))
+
+(defn play-events [player events]
+  (js/console.log (clj->js events))
+  (loop [events events]
+    (let [current (first events)
+          others  (rest events)]
+
+      (post-player-event player current)
+      (if-not (empty? others)
+        (recur others)))))
+
+(defn get-player-window []
+  (-> (.getElementById js/document "player-frame")
+      (.-contentWindow)))
+
+(defn handle-player-load [events]
+  (js/console.log (clj->js events))
+  (let [player (get-player-window)]
+
+    (play-events player events)))
+
 (defn solo-session-page [params]
-  (js/console.log params)
-  (let [data (st/session-data)
-        sid  (st/session-id)]
+  (let [sid  (st/session-id)]
 
   (main-layout
    [mui/t {:variant 'h4
-           :key     :session-title} sid])))
+           :key     :session-title} sid]
+   [:iframe {:src    "/player"
+             :key    :player-frame
+             :id     :player-frame
+             :onLoad (fn [] (st/get-session! sid #(handle-player-load %)))}])))
 
 (sec/defroute "/" [] (st/set-page! #'sessions-page))
 

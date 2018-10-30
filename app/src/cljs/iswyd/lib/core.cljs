@@ -1,10 +1,9 @@
 (ns iswyd.lib.core
   (:require [goog.dom :as dom]
             [clojure.string :as cstr]
-            [clojure.string :as str]
             [iswyd.api.core :as api]))
 
-;; -------------------------
+;; ------------------------- /
 ;; Changelog
 ;; TODO: Throttle recording of changes?
 ;; TODO: Decide on whether to use absolute or relative times for changes

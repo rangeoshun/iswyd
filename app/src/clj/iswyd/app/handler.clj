@@ -40,10 +40,7 @@
 
 (defroutes app-routes
   (GET "/" [] (loading-page))
-  ;; (GET "/sessions" [] (loading-page))
-  ;; (GET "/sessions/:id" [] (loading-page))
-  ;; (GET "/about" [] (loading-page))
-  ;; (GET "/player" [] (player-page))
+  (GET "/player" [] (player-page))
   (route/resources "/")
   (route/not-found "Not Found"))
 
