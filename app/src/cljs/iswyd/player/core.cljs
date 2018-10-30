@@ -16,11 +16,18 @@
     (.postMessage worker (clj->js ["patch-apply" patch prev]))))
 
 (defn worker-cb [msg]
-  (.log js/console msg))
+  (let [data (aget msg "data")
+        html (aget data 1)]
+
+    (st/set-html! html)
+    (.write js/document html)))
 
 (defn handle-change [event]
   (if (aget event "key")
     (patch-apply (aget event "patch"))))
+
+(defn handle-resize [event]
+  (.postMessage (.-parent js/window) event))
 
 (defn handle-event [event]
   (let [type (aget event "type")]
@@ -29,11 +36,12 @@
       "move"   nil
       "down"   nil
       "up"     nil
+      "resize" (handle-resize event)
       "scroll" nil
       (.log js/console (str "Unrecognized event type: " type)))))
 
 (defn main []
   (set! (.-onmessage worker) #(worker-cb %))
-  (js/addEventListener "message" (fn [ev] (handle-event (aget ev "data")))))
+  (js/addEventListener "message" #(handle-event (aget % "data"))))
 
 (main)

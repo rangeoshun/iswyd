@@ -59,8 +59,9 @@
                :justify   'center
                :spacing   spacing}
      (conj [mui/grid {:item true
-                      :xs         12
-                      :md         6}]
+                      :xs   12
+                      :md   10
+                      :style {:position 'relative}}]
            content)]]])
 
 (defn about-page []
@@ -88,25 +89,57 @@
       (if-not (empty? others)
         (recur others)))))
 
+(defn get-player-frame []
+  (.getElementById js/document "player-frame"))
+
 (defn get-player-window []
-  (-> (.getElementById js/document "player-frame")
-      (.-contentWindow)))
+  (.-contentWindow (get-player-frame)))
+
+(defn scale-player []
+  (let [player (get-player-frame)
+        parent (.-parentNode player)
+        p-width (.-offsetWidth parent)
+        width  (.-offsetWidth player)
+        ratio  (/ p-width width)
+        style  (.-style player)]
+
+    (aset style "transform" (str "scale(" ratio ")"))))
+
+(defn resize-player [event]
+  (let [player (get-player-frame)]
+
+    (aset player "width" (aget event "width"))
+    (aset player "height" (aget event "height")))
+  (scale-player))
+
+(defn handle-player-message [ev]
+  (let [event (aget ev "data")]
+    (case (aget event "type")
+      "resize" (resize-player event)
+      nil)))
 
 (defn handle-player-load [events]
   (let [player (get-player-window)]
 
+    (js/addEventListener "message" #(handle-player-message %))
     (play-events player events)))
 
 (defn solo-session-page [params]
-  (let [sid  (st/session-id)]
+  (let [sid (st/session-id)]
 
   (main-layout
    [mui/t {:variant 'h4
            :key     :session-title} sid]
-   [:iframe {:src    "/player"
-             :key    :player-frame
-             :id     :player-frame
-             :onLoad (fn [] (st/get-session! sid #(handle-player-load %)))}])))
+   [:iframe {:src         "/player"
+             :key         :player-frame
+             :id          :player-frame
+             :scrolling   'no
+             :frameBorder 1
+             :width       "100%"
+             :style       {:pointer-events   'none
+                           :position         'absolute
+                           :transform-origin "0 0"}
+             :onLoad      (fn [] (st/get-session! sid #(handle-player-load %)))}])))
 
 (sec/defroute "/" [] (st/set-page! #'sessions-page))
 

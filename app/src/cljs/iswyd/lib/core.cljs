@@ -321,7 +321,7 @@
   (reset! curr-resize (resize-ev)))
 
 (defn resize-cycle! []
-  (resize-handler!)
+  (log-resize! (resize-ev))
   (js/setInterval
    (fn []
      (let [prev @prev-resize

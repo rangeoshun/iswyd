@@ -14,7 +14,6 @@
     (.postMessage js/self #js ["patch-make" (.patch_toText dmp patch) key])))
 
 (defn handle-patch-apply [data]
-  (.log js/console (nth data 0))
   (let [patch  (.patch_fromText dmp (nth data 0))
         prev   (nth data 1)
         result (first (.patch_apply dmp patch prev))]
