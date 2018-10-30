@@ -46,7 +46,8 @@
                   (let [sid (:session_id session)]
 
                     [mui/list-item {:button true :key sid}
-                     [mui/t {:variant 'h6} sid]]))
+                     [:a {:href (str "/sessions/" sid)}
+                      [mui/t {:variant 'h6} sid]]]))
                 (st/sessions-list)))]])
 
 (defn main-layout [& content]
@@ -75,7 +76,22 @@
             :key     :session-title} "Sessions"]
     (session-paper)))
 
+(defn solo-session-page [params]
+  (js/console.log params)
+  (let [data (st/session-data)
+        sid  (st/session-id)]
+
+  (main-layout
+   [mui/t {:variant 'h4
+           :key     :session-title} sid])))
+
 (sec/defroute "/" [] (st/set-page! #'sessions-page))
+
+(sec/defroute "/sessions" [] (st/set-page! #'sessions-page))
+(sec/defroute "/sessions/:sid" {:as params}
+  (do
+    (st/set-session! (:sid params))
+    (st/set-page! #'solo-session-page)))
 
 (sec/defroute "/about" [] (st/set-page! #'about-page))
 
@@ -84,7 +100,9 @@
 
 (defn main []
   (acc/configure-navigation!
-   {:nav-handler  #(sec/dispatch! %1)
-    :path-exists? #(sec/locate-route %1)})
+   {:nav-handler  (fn [route]
+                    (sec/dispatch! route)
+                    (mount))
+    :path-exists? #(sec/locate-route %)})
   (acc/dispatch-current!)
   (mount))

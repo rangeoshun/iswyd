@@ -14,6 +14,7 @@
 (def toolbar (r/adapt-react-class (.-Toolbar mui)))
 (def t (r/adapt-react-class (.-Typography mui)))
 (def label (r/adapt-react-class (.-FormLabel mui)))
+(def link (r/adapt-react-class (.-Button mui)))
 (def list (r/adapt-react-class (.-List mui)))
 (def list-item (r/adapt-react-class (.-ListItem mui)))
 (def text-field (r/adapt-react-class (.-TextField mui)))

@@ -3,6 +3,9 @@
             [reagent.core :as r]))
 
 (defonce state (r/atom {:page     nil
+                        :session  {:loading? false
+                                   :id       nil
+                                   :data     nil}
                         :sessions {:loading? false
                                    :list     []
                                    :time     nil}}))
@@ -30,3 +33,22 @@
 
 (defn sessions-loading? []
   (get-in @state [:sessions :loading?]))
+
+(defn set-session! [sid]
+  (swap! state assoc-in {:session :id} sid))
+
+(defn session-id []
+  (get-in @state {:session :id}))
+
+(defn session-data []
+  (get-in @state {:session :data}))
+
+(defn get-session! [sid]
+  (if (session-id)
+    (do
+      (swap! state assoc-in [:session :loading?] true)
+      (let [req (api/get-session sid)]
+        (.then req (fn [_res]
+                     (let [res (js->clj _res :keywordize-keys true)]
+                       (swap! state assoc-in [:session :data] (:data res))
+                       (swap! state assoc-in [:sessions :loading?] false))))))))

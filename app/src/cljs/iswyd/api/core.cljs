@@ -37,3 +37,6 @@
 
 (defn get-sessions []
   (api-req "/api/sessions" {:method :GET} {}))
+
+(defn get-session [sid]
+  (api-req (str "/api/sessions/" sid) {:method :GET} {}))
