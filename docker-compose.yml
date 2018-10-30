@@ -12,7 +12,7 @@ services:
     working_dir: "/app/app"
     ports:
       - 3449:3449
-    command: lein figwheel app lib worker
+    command: lein figwheel app lib worker player
 
     networks:
       - dev_net
@@ -126,7 +126,7 @@ services:
       - 27017:27017
     volumes:
       - ./data/db:/data
-    command: "mongod"
+    command: mongod --dbpath /data
     networks:
       - dev_net
 
