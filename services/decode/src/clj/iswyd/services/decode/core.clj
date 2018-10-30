@@ -25,9 +25,7 @@
 
 (defn decode [data]
   (json/read-str (. LZString decompressFromBase64 data)
-                 :value-fn (fn [_ val] (if (string? val)
-                                        (ruc/percent-decode val)
-                                        val))
+                 :value-fn (fn [_ val] val)
                  :key-fn keyword))
 
 (defn pub-decode [sid cid evs]
