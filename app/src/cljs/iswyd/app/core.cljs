@@ -80,7 +80,6 @@
   (.postMessage player (clj->js ev) "*"))
 
 (defn play-events [player events]
-  (js/console.log (clj->js events))
   (loop [events events]
     (let [current (first events)
           others  (rest events)]
@@ -94,7 +93,6 @@
       (.-contentWindow)))
 
 (defn handle-player-load [events]
-  (js/console.log (clj->js events))
   (let [player (get-player-window)]
 
     (play-events player events)))
