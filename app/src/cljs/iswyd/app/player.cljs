@@ -81,8 +81,8 @@
   (let [pointer (pointer)
         style   (.-style pointer)]
 
-    (aset style "top" (str (aget event "x") "px"))
-    (aset style "left" (str (aget event "y") "px"))))
+    (aset style "left" (str (aget event "x") "px"))
+    (aset style "top" (str (aget event "y") "px"))))
 
 (defn handle-player-message [ev]
   (let [event (aget ev "data")]
