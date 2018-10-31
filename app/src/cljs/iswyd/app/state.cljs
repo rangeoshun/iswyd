@@ -9,7 +9,11 @@
                                    :user-agent nil}
                         :sessions {:loading? false
                                    :list     []
-                                   :time     nil}}))
+                                   :time     nil}
+                        :player   {:html      nil
+                                   :last-time nil
+                                   :seek      nil
+                                   :changes   []}}))
 
 (defn set-page! [page]
   (swap! state assoc :page page))
@@ -36,13 +40,13 @@
   (get-in @state [:sessions :loading?]))
 
 (defn set-session! [sid]
-  (swap! state assoc-in {:session :id} sid))
+  (swap! state assoc-in [:session :id] sid))
 
 (defn session-id []
-  (get-in @state {:session :id}))
+  (get-in @state [:session :id]))
 
 (defn session-events []
-  (get-in @state {:session :data}))
+  (get-in @state [:session :events]))
 
 (defn get-session! [sid cb]
   (if (session-id)
@@ -51,8 +55,50 @@
       (let [req (api/get-session sid)]
         (.then req (fn [_res]
                      (let [res  (js->clj _res :keywordize-keys true)
-                           data (:data res)]
-                       (cb (:events data))
-                       (swap! state assoc-in [:session :events] (:events data))
+                           data (:data res)
+                           events (sort-by (juxt :time) (:events data))]
+                       (cb events)
+                       (swap! state assoc-in [:session :events] events)
                        (swap! state assoc-in [:session :user-agent] (:user_agent data))
                        (swap! state assoc-in [:session :loading?] false))))))))
+
+(defn set-html! [html]
+  (swap! state assoc-in [:player :html] html))
+
+(defn get-html []
+  (or (get-in @state [:player :html]) ""))
+
+(defn set-last-time! [time]
+  (swap! state assoc-in [:player :last-time] time))
+
+(defn get-changes []
+  (get-in @state [:player :changes]))
+
+(defn last-change []
+  (last (get-changes)))
+
+(defn first-change []
+  (first (get-changes)))
+
+(defn zero-time []
+  (or (aget (first-change) "time") 0))
+
+(defn set-changes! [events]
+  (swap! state assoc-in [:player :changes] events))
+
+(defn update-change! [event index]
+  (set-html! (aget event "html"))
+  (aset event "delta" (- (aget event "time") (zero-time)))
+  (swap! state assoc-in [:player :changes index] event))
+
+(defn get-change-at [index]
+  (get-in @state [:player :changes index]))
+
+(defn set-seek! [int]
+  (swap! state assoc-in [:player :seek] int))
+
+(defn get-seek []
+  (get-in @state [:player :seek]))
+
+(defn count-changes []
+  (count (get-changes)))

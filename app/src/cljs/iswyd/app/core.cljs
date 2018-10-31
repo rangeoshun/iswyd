@@ -2,6 +2,7 @@
   (:require [accountant.core :as acc]
             [iswyd.app.material-ui :as mui]
             [iswyd.app.state :as st]
+            [iswyd.app.player :as p]
             [reagent.core :as r]
             [secretary.core :as sec :include-macros true]))
 
@@ -16,17 +17,7 @@
                                                   :main          "#f44336"
                                                   :dark          "#ba000d"
                                                   :contrast-text "#000000"}}
-                         :typography {:useNextVariants true}
-                         :overrides  {
-                                      ;; :MuiAppBar {:root {:paddingLeft   0
-                                      ;;                    :paddingRight  0
-                                      ;;                    :paddingTop    0
-                                      ;;                    :paddingBottom 0}}
-                                      ;; :MuiPaper  {:root {:paddingLeft   padding
-                                      ;;                    :paddingRight  padding
-                                      ;;                    :paddingTop    padding
-                                      ;;                    :paddingBottom padding}}
-                                      }}))
+                         :typography {:useNextVariants true}}))
 
 (def theme (mui/create-theme theme-map))
 
@@ -77,53 +68,6 @@
            :key     :session-title} "Sessions"]
     (session-paper)))
 
-(defn post-player-event [player ev]
-  (.postMessage player (clj->js ev) "*"))
-
-(defn play-events [player events]
-  (loop [events events]
-    (let [current (first events)
-          others  (rest events)]
-
-      (post-player-event player current)
-      (if-not (empty? others)
-        (recur others)))))
-
-(defn get-player-frame []
-  (.getElementById js/document "player-frame"))
-
-(defn get-player-window []
-  (.-contentWindow (get-player-frame)))
-
-(defn scale-player []
-  (let [player (get-player-frame)
-        parent (.-parentNode player)
-        p-width (.-offsetWidth parent)
-        width  (.-offsetWidth player)
-        ratio  (/ p-width width)
-        style  (.-style player)]
-
-    (aset style "transform" (str "scale(" ratio ")"))))
-
-(defn resize-player [event]
-  (let [player (get-player-frame)]
-
-    (aset player "width" (aget event "width"))
-    (aset player "height" (aget event "height")))
-  (scale-player))
-
-(defn handle-player-message [ev]
-  (let [event (aget ev "data")]
-    (case (aget event "type")
-      "resize" (resize-player event)
-      nil)))
-
-(defn handle-player-load [events]
-  (let [player (get-player-window)]
-
-    (js/addEventListener "message" #(handle-player-message %))
-    (play-events player events)))
-
 (defn solo-session-page [params]
   (let [sid (st/session-id)]
 
@@ -137,9 +81,9 @@
              :frameBorder 1
              :width       "100%"
              :style       {:pointer-events   'none
-                           :position         'absolute
+                           :position         'relative
                            :transform-origin "0 0"}
-             :onLoad      (fn [] (st/get-session! sid #(handle-player-load %)))}])))
+             :onLoad      (fn [] (st/get-session! sid #(p/handle-player-load %)))}])))
 
 (sec/defroute "/" [] (st/set-page! #'sessions-page))
 

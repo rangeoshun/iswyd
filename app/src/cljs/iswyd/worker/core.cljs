@@ -14,11 +14,15 @@
     (.postMessage js/self #js ["patch-make" (.patch_toText dmp patch) key])))
 
 (defn handle-patch-apply [data]
-  (let [patch  (.patch_fromText dmp (nth data 0))
+  (let [event  (nth data 0)
+        index  (nth data 2)
+        patch  (.patch_fromText dmp (aget event "patch"))
         prev   (nth data 1)
         result (first (.patch_apply dmp patch prev))]
 
-    (.postMessage js/self #js ["patch-apply" result])))
+    (aset event "html" result)
+    (aset event "patch" nil)
+    (.postMessage js/self #js ["patch-apply" event index])))
 
 (defn handle-compress [data]
   (let [log    (nth data 0)

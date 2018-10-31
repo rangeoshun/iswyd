@@ -3,28 +3,28 @@
             [cljsjs.diffdom]
             [iswyd.player.state :as st]))
 
-;;(defnonce dd (js/diffDOM.))
+(defonce dd (js/diffDOM.))
+(defonce parser (js/DOMParser.))
 
-(defn init-worker! []
-  (js/Worker. "/js/worker.js"))
+(defn playback! [event]
+  (.log js/console (aget event "time"))
 
-(defonce worker (init-worker!))
+  (if (nil? (st/get-seek))
+    (st/set-seek! 0))
 
-(defn patch-apply [patch]
-  (let [prev (or (st/get-html) "")]
+  (let [seek  (st/get-seek)
+        delta (aget event "delta")]
 
-    (.postMessage worker (clj->js ["patch-apply" patch prev]))))
+    (js/setTimeout
+     (fn []
+       (let [html     (aget event "html")
+             doc      (.parseFromString (js/DOMParser.) html "text/html")
+             old-root (.getRootNode js/document)
+             new-root (.getRootNode doc)]
 
-(defn worker-cb [msg]
-  (let [data (aget msg "data")
-        html (aget data 1)]
-
-    (st/set-html! html)
-    (.write js/document html)))
-
-(defn handle-change [event]
-  (if (aget event "key")
-    (patch-apply (aget event "patch"))))
+         (.apply dd old-root (.diff dd old-root new-root))))
+     delta))
+  (st/set-seek! (inc (st/get-seek))))
 
 (defn handle-resize [event]
   (.postMessage (.-parent js/window) event))
@@ -32,7 +32,7 @@
 (defn handle-event [event]
   (let [type (aget event "type")]
     (case type
-      "change" (handle-change event)
+      "change" (playback! event)
       "move"   nil
       "down"   nil
       "up"     nil
@@ -41,7 +41,6 @@
       (.log js/console (str "Unrecognized event type: " type)))))
 
 (defn main []
-  (set! (.-onmessage worker) #(worker-cb %))
   (js/addEventListener "message" #(handle-event (aget % "data"))))
 
 (main)

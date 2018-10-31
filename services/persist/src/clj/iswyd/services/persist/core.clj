@@ -37,8 +37,7 @@
 (defn up-doc [sid cid evs]
   (mc/update db coll {:session_id sid :changes {$ne cid}}
              {$push {:changes cid
-                     :events  {$each evs
-                               $sort {:tm 1}}}}))
+                     :events  {$each evs}}}))
 
 ;; TODO: Save cids in hash with cid as key and timestamp as value
 (defn handle [msg]
