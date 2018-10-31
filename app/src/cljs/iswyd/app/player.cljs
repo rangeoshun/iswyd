@@ -66,8 +66,8 @@
 (defn resize-player [event]
   (let [player (get-player-frame)]
 
-    (aset player "width" (aget event "width"))
-    (aset player "height" (aget event "height")))
+    (aset player "width" (:width event))
+    (aset player "height" (:height event)))
   (scale-player))
 
 (defn handle-player-message [ev]
@@ -80,4 +80,5 @@
   (let [player (get-player-window)]
 
     (js/addEventListener "message" #(handle-player-message %))
+    (resize-player (first (filter #(= "resize" (:type %)) events)))
     (decode-changes events)))
