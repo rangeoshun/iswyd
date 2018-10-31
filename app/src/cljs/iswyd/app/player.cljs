@@ -6,14 +6,11 @@
 
 (defonce worker (init-worker!))
 
-(defn changes [events]
-  (into [] (doall (filter #(= "change" (:type %)) events))))
-
 (defn post-player-event [player ev]
   (.postMessage player (clj->js ev) "*"))
 
-(defn play-changes [player]
-  (loop [events (st/get-changes)]
+(defn play-events [player]
+  (loop [events (st/session-events)]
     (let [current (first events)
           others  (rest events)]
 
@@ -22,19 +19,22 @@
       (if-not (empty? others)
         (recur others)))))
 
-(defn get-player-frame []
+(defn player-container []
+  (.getElementById js/document "player-container"))
+
+(defn player-frame []
   (.getElementById js/document "player-frame"))
 
-(defn get-player-window []
-  (.-contentWindow (get-player-frame)))
+(defn player-window []
+  (.-contentWindow (player-frame)))
 
-(defn patch-apply [patch index]
-  (let [prev (st/get-html)]
+(defn patch-apply [event index]
+  (let [prev (st/html)]
 
-    (.postMessage worker (clj->js ["patch-apply" patch prev index]))))
+    (.postMessage worker (clj->js ["patch-apply" event prev index]))))
 
 (defn scale-player []
-  (let [player (get-player-frame)
+  (let [player (player-container)
         parent (.-parentNode player)
         p-width (.-offsetWidth parent)
         width  (.-offsetWidth player)
@@ -43,42 +43,60 @@
 
     (aset style "transform" (str "scale(" ratio ")"))))
 
-(defn decode-change [index]
-  (let [change (st/get-change-at index)]
+(defn decode-event [index]
+  (let [event (st/event-at index)]
     (cond
-      (<= (st/count-changes) index) (play-changes (get-player-window))
-      change (patch-apply change index))))
+      (>= index (st/count-events)) (play-events (player-window))
+      (= "change" (:type event)) (patch-apply event index)
+      :else (do
+              (st/update-event! (clj->js event) index)
+              (decode-event (inc index))))))
 
-(defn decode-changes [events]
-  (st/set-changes! (changes events))
-  (decode-change 0))
+(defn decode-events [events]
+  (st/session-events! events)
+  (decode-event 0))
 
 (defn worker-cb [msg]
   (let [data  (aget msg "data")
         event (aget data 1)
         index (aget data 2)]
 
-    (st/update-change! event index)
-    (decode-change (inc index))))
+    (st/update-event! event index)
+    (decode-event (inc index))))
 
 (set! (.-onmessage worker) #(worker-cb %))
 
 (defn resize-player [event]
-  (let [player (get-player-frame)]
+  (let [player (player-container)
+        style  (.-style player)]
 
-    (aset player "width" (:width event))
-    (aset player "height" (:height event)))
-  (scale-player))
+    (aset style "width" (str (aget event "width") "px"))
+    (aset style "height" (str (aget event "height") "px"))
+  (scale-player)))
+
+(defn pointer []
+  (.getElementById js/document "pointer"))
+
+(defn move-pointer [event]
+  (let [pointer (pointer)
+        style   (.-style pointer)]
+
+    (aset style "top" (str (aget event "x") "px"))
+    (aset style "left" (str (aget event "y") "px"))))
 
 (defn handle-player-message [ev]
   (let [event (aget ev "data")]
     (case (aget event "type")
       "resize" (resize-player event)
+      "move"   (move-pointer event)
+      "down"   (move-pointer event)
+      "up"     (move-pointer event)
       nil)))
 
 (defn handle-player-load [events]
-  (let [player (get-player-window)]
+  (let [player (player-window)]
 
     (js/addEventListener "message" #(handle-player-message %))
-    (resize-player (first (filter #(= "resize" (:type %)) events)))
-    (decode-changes events)))
+    (js/addEventListener "resize" (fn [] (scale-player)))
+    (resize-player (clj->js (first (filter #(= "resize" (:type %)) events))))
+    (decode-events events)))

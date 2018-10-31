@@ -74,16 +74,26 @@
   (main-layout
    [mui/t {:variant 'h4
            :key     :session-title} sid]
-   [:iframe {:src         "/player"
-             :key         :player-frame
-             :id          :player-frame
-             :scrolling   'no
-             :frameBorder 1
-             :width       "100%"
-             :style       {:pointer-events   'none
-                           :position         'relative
-                           :transform-origin "0 0"}
-             :onLoad      (fn [] (st/get-session! sid #(p/handle-player-load %)))}])))
+   [:div {:key   :player-container
+          :id    :player-container
+          :style {:position         'relative
+                  :transform-origin "0 0"}}
+    [:iframe {:src         "/player"
+              :key         :player-frame
+              :id          :player-frame
+              :scrolling   'no
+              :frameBorder 1
+              :style       {:pointer-events   'none
+                            :position         'relative
+                            :width            "100%"
+                            :height           "100%"}
+              :onLoad      (fn [] (st/get-session! sid #(p/handle-player-load %)))}]
+    [mui/pointer {:key   :pointer
+                  :id    :pointer
+                  :style {:position 'absolute
+                          :transition       "all .1s linear"
+                          :top      0
+                          :left     0}}]])))
 
 (sec/defroute "/" [] (st/set-page! #'sessions-page))
 

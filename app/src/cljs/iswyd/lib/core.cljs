@@ -232,8 +232,8 @@
 (defn mouse-ev [type, ev] {:type    type
                            :buttons (.-buttons ev)
                            :keys    (keys-num ev)
-                           :x       (.-clientX ev)
-                           :y       (.-clientY ev)
+                           :x       (.-pageX ev)
+                           :y       (.-pageY ev)
                            :time    (now)})
 
 (defn log-mouse! [ev]

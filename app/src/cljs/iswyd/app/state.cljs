@@ -12,8 +12,7 @@
                                    :time     nil}
                         :player   {:html      nil
                                    :last-time nil
-                                   :seek      nil
-                                   :changes   []}}))
+                                   :seek      nil}}))
 
 (defn set-page! [page]
   (swap! state assoc :page page))
@@ -58,41 +57,39 @@
                            data (:data res)
                            events (sort-by (juxt :time) (:events data))]
                        (cb events)
-                       (swap! state assoc-in [:session :events] events)
                        (swap! state assoc-in [:session :user-agent] (:user_agent data))
                        (swap! state assoc-in [:session :loading?] false))))))))
 
-(defn set-html! [html]
+(defn html! [html]
   (swap! state assoc-in [:player :html] html))
 
-(defn get-html []
+(defn html []
   (or (get-in @state [:player :html]) ""))
 
-(defn set-last-time! [time]
+(defn last-time! [time]
   (swap! state assoc-in [:player :last-time] time))
 
-(defn get-changes []
-  (get-in @state [:player :changes]))
+(defn last-event []
+  (last (session-events)))
 
-(defn last-change []
-  (last (get-changes)))
-
-(defn first-change []
-  (first (get-changes)))
+(defn first-event []
+  (first (session-events)))
 
 (defn zero-time []
-  (or (aget (first-change) "time") 0))
+  (or (aget (first-event) "time") 0))
 
-(defn set-changes! [events]
-  (swap! state assoc-in [:player :changes] events))
+(defn session-events! [events]
+  (swap! state assoc-in [:session :events] (into [] events)))
 
-(defn update-change! [event index]
-  (set-html! (aget event "html"))
+(defn update-event! [event index]
+  (let [html (aget event "html")]
+    (if html
+      (html! html)))
   (aset event "delta" (- (aget event "time") (zero-time)))
-  (swap! state assoc-in [:player :changes index] event))
+  (swap! state assoc-in [:session :events index] event))
 
-(defn get-change-at [index]
-  (get-in @state [:player :changes index]))
+(defn event-at [index]
+  (get-in (session-events) [index]))
 
 (defn set-seek! [int]
   (swap! state assoc-in [:player :seek] int))
@@ -100,5 +97,5 @@
 (defn get-seek []
   (get-in @state [:player :seek]))
 
-(defn count-changes []
-  (count (get-changes)))
+(defn count-events []
+  (count (session-events)))
