@@ -16,11 +16,14 @@ It accessable on `http://0.0.0.0`
 
 ## TODO
 
-- [ ] Create the player to replay sessions
+- [x] Create the player to replay sessions
+- [ ] Enhance player with seeker, toolbar, etc.
+- [ ] Handle concurrent sessions, and navigating between them
+- [ ] Stash resources to not use original assets
 - [ ] Separate monolith subprojects for `lib`, `worker` and `api`
-- [ ] Capture more user info (eg. screen size)
+- [ ] Capture more user info (eg. screen size, location, etc.)
 - [ ] Allow custom metadata for sessions
 - [ ] Provide stats for regular and metadata
-- [ ] Split up app into components
+- [ ] Lift app components from core
 - [ ] Write tests
 - [ ] Manage production builds and release
