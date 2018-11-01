@@ -77,7 +77,8 @@
    [:div {:key   :player-container
           :id    :player-container
           :style {:position         'relative
-                  :transform-origin "0 0"}}
+                  :transform-origin "0 0"
+                  :overflow         'hidden}}
     [:iframe {:src         "/player"
               :key         :player-frame
               :id          :player-frame
@@ -90,10 +91,10 @@
               :onLoad      (fn [] (st/get-session! sid #(p/handle-player-load %)))}]
     [mui/pointer {:key   :pointer
                   :id    :pointer
-                  :style {:position 'absolute
-                          :transition       "all .1s linear"
-                          :top      0
-                          :left     0}}]])))
+                  :style {:position  'absolute
+                          :transition "all .1s linear"
+                          :top        -30
+                          :left       -30}}]])))
 
 (sec/defroute "/" [] (st/set-page! #'sessions-page))
 
