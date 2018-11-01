@@ -10,10 +10,9 @@
 
 (defn handle-change [event]
   (let [html     (.replace (aget event "html") "<head>" (str "<head>" css))
-        doc      (.parseFromString (js/DOMParser.) html "text/html")
-        old-root (.getRootNode js/document)
-        new-root (.getRootNode doc)]
-
+        doc      (.parseFromString parser html "text/html")
+        old-root (.-firstElementChild js/document)
+        new-root (.-firstElementChild doc)]
     (.apply dd old-root (.diff dd old-root new-root))))
 
 (defn send-top [event]
