@@ -94,9 +94,11 @@
       nil)))
 
 (defn handle-player-load [events]
-  (let [player (player-window)]
+  (let [player (player-window)
+        ;; FIXME: Find out why does an empty object get postetd in events
+        events  (filter #(contains? % :time) events)]
 
     (js/addEventListener "message" #(handle-player-message %))
     (js/addEventListener "resize" (fn [] (scale-player)))
-    (resize-player (clj->js (first (filter #(= "resize" (:type %)) events))))
+    ;; (resize-player (clj->js (first (filter #(= "resize" (:type %)) events))))
     (decode-events events)))
