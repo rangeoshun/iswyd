@@ -83,9 +83,9 @@
 
   :cljsbuild
   {:builds [{:id           "min-lib"
-             :source-paths ["src/cljs/iswyd/lib"]
-             :compiler     {:main          "iswyd.lib.core"
-                            :externs       ["iswyd_lib.ext.js"]
+             :source-paths ["src/cljs/iswyd/lib"
+                            "src/cljs/iswyd/api"]
+             :compiler     {:externs       ["iswyd_lib.ext.js"]
                             :output-to     "target/cljsbuild/public/js/iswyd_lib.min.js"
                             :output-dir    "target/cljsbuild/public/js/min_lib_out"
                             :optimizations :advanced
@@ -93,8 +93,7 @@
 
             {:id           "min-worker"
              :source-paths ["src/cljs/iswyd/worker"]
-             :compiler     {:main          "iswyd.worker.core"
-                            :output-to     "target/cljsbuild/public/js/iswyd_worker.min.js"
+             :compiler     {:output-to     "target/cljsbuild/public/js/iswyd_worker.min.js"
                             :output-dir    "target/cljsbuild/public/js/min_worker-out"
                             :optimizations :advanced
                             :pretty-print  true}}
