@@ -47,6 +47,9 @@
 (defn session-events []
   (get-in @state [:session :events]))
 
+(defn html! [html]
+  (swap! state assoc-in [:player :html] html))
+
 (defn get-session! [sid cb]
   (if (session-id)
     (do
@@ -57,11 +60,9 @@
                            data (:data res)
                            events (sort-by (juxt :time) (:events data))]
                        (cb events)
+                       (html! "")
                        (swap! state assoc-in [:session :user-agent] (:user_agent data))
                        (swap! state assoc-in [:session :loading?] false))))))))
-
-(defn html! [html]
-  (swap! state assoc-in [:player :html] html))
 
 (defn html []
   (or (get-in @state [:player :html]) ""))
