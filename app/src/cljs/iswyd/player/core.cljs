@@ -8,12 +8,25 @@
 
 (defonce css "<style>* { scroll-behavior: smooth; }</style>")
 
+(defn sanitize-html [html]
+  (-> html
+      ;; Add scroll smoother CSS
+      (.replace #"<head>" (str "<head>" css))
+      ;; Remove title as that's not displayed and minimizes style reflow in head
+      (.replace #"<title>.{0,}</title>" "")
+      ;; Remove strange attribute "%" first seen on github.com
+      (.replace #"(?m)(<.{0,})(%=\".{0,}\")(.{0,}>)" "$1$3")))
+
 (defn handle-change [event]
-  (let [html     (.replace (aget event "html") "<head>" (str "<head>" css))
+  (let [html     (sanitize-html (aget event "html"))
         doc      (.parseFromString parser html "text/html")
-        old-root (.-firstElementChild js/document)
-        new-root (.-firstElementChild doc)]
-    (.apply dd old-root (.diff dd old-root new-root))))
+        old-body (.-body js/document)
+        new-body (.-body doc)
+        old-head (.-head js/document)
+        new-head (.-head doc)]
+
+    (.apply dd old-head (.diff dd old-head new-head))
+    (.apply dd old-body (.diff dd old-body new-body))))
 
 (defn send-top [event]
   (.postMessage (.-parent js/window) event))
