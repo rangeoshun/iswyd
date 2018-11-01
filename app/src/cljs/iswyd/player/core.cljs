@@ -14,8 +14,11 @@
       (.replace #"<head>" (str "<head>" css))
       ;; Remove title as that's not displayed and minimizes style reflow in head
       (.replace #"<title>.{0,}</title>" "")
+      ;; Remove meta from head
+      (.replace (js/RegExp "<meta.{0,}>" "g") "")
+      (.replace (js/RegExp "</meta>" "g") "")
       ;; Remove strange attribute "%" first seen on github.com
-      (.replace #"(?m)(<.{0,})(%=\".{0,}\")(.{0,}>)" "$1$3")))
+      (.replace (js/RegExp "(<.{0,})(%=\".{0,}\")(.{0,}>)" "g")"$1$3")))
 
 (defn handle-change [event]
   (let [html     (sanitize-html (aget event "html"))
