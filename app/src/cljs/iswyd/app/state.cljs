@@ -54,13 +54,14 @@
   (if (session-id)
     (do
       (swap! state assoc-in [:session :loading?] true)
+      (swap! state assoc-in [:session :events] nil)
+      (html! "")
       (let [req (api/get-session sid)]
         (.then req (fn [_res]
                      (let [res  (js->clj _res :keywordize-keys true)
                            data (:data res)
                            events (sort-by (juxt :time) (:events data))]
                        (cb events)
-                       (html! "")
                        (swap! state assoc-in [:session :user-agent] (:user_agent data))
                        (swap! state assoc-in [:session :loading?] false))))))))
 
