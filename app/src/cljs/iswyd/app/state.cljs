@@ -82,11 +82,14 @@
   (swap! state assoc-in [:session :events] (into [] events)))
 
 (defn update-event! [event index]
-  (let [html (aget event "html")]
+  (let [html  (aget event "html")
+        delta (if (not= index 0)
+                (- (aget event "time") (zero-time))
+                0)]
     (if html
-      (html! html)))
-  (aset event "delta" (- (aget event "time") (zero-time)))
-  (swap! state assoc-in [:session :events index] event))
+      (html! html))
+    (aset event "delta" delta)
+    (swap! state assoc-in [:session :events index] event)))
 
 (defn event-at [index]
   (get-in (session-events) [index]))

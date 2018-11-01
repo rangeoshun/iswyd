@@ -6,8 +6,10 @@
 (defonce dd (js/diffDOM.))
 (defonce parser (js/DOMParser.))
 
+(defonce css "<style>* { scroll-behavior: smooth; }</style>")
+
 (defn handle-change [event]
-  (let [html     (aget event "html")
+  (let [html     (.replace (aget event "html") "<head>" (str "<head>" css))
         doc      (.parseFromString (js/DOMParser.) html "text/html")
         old-root (.getRootNode js/document)
         new-root (.getRootNode doc)]
@@ -16,6 +18,13 @@
 
 (defn send-top [event]
   (.postMessage (.-parent js/window) event))
+
+(defn handle-scroll [event]
+  (let [mark (aget event "mark")
+        x    (aget event "x")
+        y    (aget event "y")]
+    (if-not mark
+      (js/scrollTo x y))))
 
 (defn handle-event [event]
   (if (nil? (st/get-seek))
@@ -29,8 +38,8 @@
            "move"   (send-top event)
            "down"   (send-top event)
            "up"     (send-top event)
-           "resize" nil ;;(handle-resize event)
-           "scroll" nil
+           "resize" (send-top event)
+           "scroll" (handle-scroll event)
            (.log js/console (str "Unrecognized event type: " type)))))
      (aget event "delta"))
   (st/set-seek! (inc (st/get-seek))))
