@@ -180,7 +180,7 @@
 
 (defn sanitize! [root]
   ;; (add-clear root)
-  (del-nodes! (iframes root))
+  ;; (del-nodes! (iframes root))
   (del-nodes! (scripts root))
   (abs-src! (imgs root))
   (abs-href! (links root))
@@ -255,7 +255,7 @@
        (let [prev @prev-pos
              curr @curr-pos]
          (if (pos-change prev curr) (log-mouse! curr))))
-     300))
+     82))
 
 (defn listen-change! [nodes]
   (loop [nodes nodes]
@@ -286,7 +286,7 @@
 
 (defn scroll-change [prev curr]
   (or
-   (not= (:m prev) (:m curr))
+   (not= (:mark prev) (:mmark curr))
    (not= (:x prev -1) (:x curr -1))
    (not= (:y prev -1) (:y curr -1))))
 
@@ -301,7 +301,7 @@
      (let [prev @prev-scroll
            curr @curr-scroll]
        (if (scroll-change prev curr) (log-scroll! curr))))
-   100))
+   41))
 
 (defn listen-scroll! []
   (js/addEventListener "scroll" (fn [ev] (scroll-handler! :scroll ev)))
@@ -314,8 +314,8 @@
 
 (defn resize-change [prev curr]
   (or
-   (not= (:w prev -1) (:w curr -1))
-   (not= (:h prev -1) (:h curr -1))))
+   (not= (:width prev -1) (:width curr -1))
+   (not= (:height prev -1) (:height curr -1))))
 
 (defn resize-handler! []
   (reset! curr-resize (resize-ev)))
@@ -327,7 +327,7 @@
      (let [prev @prev-resize
            curr @curr-resize]
        (if (resize-change prev curr) (log-resize! curr))))
-   100))
+   82))
 
 (defn listen-resize! []
   (js/addEventListener "resize" (fn [_] (resize-handler!)))
@@ -343,7 +343,7 @@
       (api/post-change (str @sid) (second data)))))
 
 (defn init-posting! []
-  (js/setInterval #(compress-post!) 10000)
+  (js/setInterval #(compress-post!) 1000)
   (js/addEventListener "blur" #(compress-post!)))
 
 (defn init-changelog! [opts]
@@ -367,12 +367,10 @@
       true)
     false))
 
-(def iswyd-ext #js {:init      (fn [opts]
-                                 (init-changelog!
-                                  (merge {:exclude []}
-                                         (js->clj opts :keywordize-keys true))))
-                    :capture   (fn [] (capture (clone-root)))
-                    :changelog (fn [] (clj->js @changelog))})
+(def iswyd-ext #js {:init (fn [opts]
+                            (init-changelog!
+                             (merge {:exclude []}
+                                    (js->clj opts :keywordize-keys true))))})
 
 (defn main []
   (.log js/console "iSwyd registered, waiting for init...")
