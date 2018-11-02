@@ -75,7 +75,8 @@
 
 (defn solo-session-page [params]
   (let [sid     (st/session-id)
-        pointer (st/pointer)]
+        pointer (st/pointer)
+        window  (st/window)]
 
     (main-layout
      [mui/t {:variant 'h4
@@ -84,6 +85,9 @@
             :id    :player-container
             :style {:position         'relative
                     :transform-origin "0 0"
+                    :width            (:width window)
+                    :height           (:height window)
+                    :transform        (str "scale(" (:scale window) ")")
                     :overflow         'hidden}}
       [:iframe {:src         "/player"
                 :key         :player-frame

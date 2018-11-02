@@ -33,15 +33,13 @@
 
     (.postMessage worker (clj->js ["patch-apply" event prev index]))))
 
-(defn scale-player []
+(defn player-ratio [event]
   (let [player (player-container)
         parent (.-parentNode player)
         p-width (.-offsetWidth parent)
-        width  (.-offsetWidth player)
-        ratio  (/ p-width width)
-        style  (.-style player)]
+        width  (:width event)]
 
-    (aset style "transform" (str "scale(" ratio ")"))))
+    (/ p-width width)))
 
 (defn decode-event [index]
   (let [event (st/event-at index)]
@@ -67,35 +65,32 @@
 (set! (.-onmessage worker) #(worker-cb %))
 
 (defn resize-player [event]
-  (let [player (player-container)
-        style  (.-style player)]
-
-    (aset style "width" (str (aget event "width") "px"))
-    (aset style "height" (str (aget event "height") "px"))
-  (scale-player)))
+  (st/window! {:width  (:width event)
+               :height (:height event)
+               :scale  (player-ratio event)}))
 
 (defn pointer []
   (.getElementById js/document "pointer"))
 
 (defn move-pointer [event]
-  (st/pointer! {:x (aget event "x")
-                :y (aget event "y")}))
+  (st/pointer! {:x (:x event)
+                :y (:y event)}))
 
-(defn handle-player-message [ev]
-  (let [event (aget ev "data")]
-    (case (aget event "type")
-      "resize" (resize-player event)
-      "move"   (move-pointer event)
-      "down"   (move-pointer event)
-      "up"     (move-pointer event)
-      nil)))
+(defn handle-player-message [event]
+  (case (:type event)
+    "resize" (resize-player event)
+    "move"   (move-pointer event)
+    "down"   (move-pointer event)
+    "up"     (move-pointer event)
+    nil))
 
 (defn handle-player-load [events]
   (let [player (player-window)
         ;; FIXME: Find out why does an empty object get postetd in events
         events  (filter #(contains? % :time) events)]
 
-    (js/addEventListener "message" #(handle-player-message %))
-    (js/addEventListener "resize" (fn [] (scale-player)))
+    (js/addEventListener "message" #(handle-player-message
+                                     (js->clj (aget % "data") :keywordize-keys true)))
+    (js/addEventListener "resize" #(resize-player (st/window)))
     ;; (resize-player (clj->js (first (filter #(= "resize" (:type %)) events))))
     (decode-events events)))

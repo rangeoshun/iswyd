@@ -13,6 +13,8 @@
                         :player   {:html      nil
                                    :last-time nil
                                    :seek      nil
+                                   :window    {:width  0
+                                               :height 0}
                                    :pointer   {:x -30
                                                :y -30}}}))
 
@@ -112,3 +114,9 @@
 
 (defn pointer! [coords]
   (swap! state assoc-in [:player :pointer] coords))
+
+(defn window []
+  (get-in @state [:player :window]))
+
+(defn window! [win]
+  (swap! state assoc-in [:player :window] win))
