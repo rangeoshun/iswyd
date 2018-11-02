@@ -36,6 +36,8 @@
 
 (def button (r/adapt-react-class (.-Button mui)))
 
+(def button-base (r/adapt-react-class (.-ButtonBase mui)))
+
 (def popover (r/adapt-react-class (.-Popover mui)))
 
 (def paper (r/adapt-react-class (.-Paper mui)))
@@ -67,17 +69,18 @@
            :height    "8"}]
    [:polygon {:points "9.2,7.3 9.2,18.5 12.2,15.6 12.6,15.5 17.4,15.5 "}]])
 
+;; FIXME: Fix click riple position to be centered
 (defn pointer [props]
-  [button (merge-with merge
-                      {:style {:background-color "rgba(0, 0, 0, 0.08)"
-                               :poistion         'absolute
-                               :min-width        24
-                               :min-height       24
-                               :margin-top       -12
-                               :margin-left      -12
-                               :padding          0
-                               :border-radius    12}}
-                      (or props {}))
+  [button-base (merge-with merge
+                           {:style {:background-color "rgba(0, 0, 0, 0.08)"
+                                    :poistion         'absolute
+                                    :min-width        24
+                                    :min-height       24
+                                    :margin-top       -12
+                                    :margin-left      -12
+                                    :padding          0
+                                    :border-radius    12}}
+                           (or props {}))
    [pointer-icon {:style {:position 'absolute
                           :top      "50%"
                           :left     "50%"}}]])

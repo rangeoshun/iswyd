@@ -90,9 +90,8 @@
                 :onLoad      (fn [] (st/get-session! sid #(p/handle-player-load %)))}]
       [mui/pointer {:key          :pointer
                     :id           :pointer
-                    :centerRipple true
                     :style        {:position   'absolute
-                                   :transition "all .1s linear"
+                                   :transition "top .1s linear left .1s linear"
                                    :top        (:y pointer)
                                    :left       (:x pointer)}}]])))
 
