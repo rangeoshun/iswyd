@@ -12,7 +12,9 @@
                                    :time     nil}
                         :player   {:html      nil
                                    :last-time nil
-                                   :seek      nil}}))
+                                   :seek      nil
+                                   :pointer   {:x -30
+                                               :y -30}}}))
 
 (defn set-page! [page]
   (swap! state assoc :page page))
@@ -104,3 +106,9 @@
 
 (defn count-events []
   (count (session-events)))
+
+(defn pointer []
+  (get-in @state [:player :pointer]))
+
+(defn pointer! [coords]
+  (swap! state assoc-in [:player :pointer] coords))

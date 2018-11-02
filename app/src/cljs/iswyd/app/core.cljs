@@ -54,9 +54,9 @@
                :direction 'row
                :justify   'center
                :spacing   spacing}
-     (conj [mui/grid {:item true
-                      :xs   12
-                      :md   10
+     (conj [mui/grid {:item  true
+                      :xs    12
+                      :md    10
                       :style {:position 'relative}}]
            content)]]])
 
@@ -74,32 +74,33 @@
     (ic/sessions-table)))
 
 (defn solo-session-page [params]
-  (let [sid (st/session-id)]
+  (let [sid     (st/session-id)
+        pointer (st/pointer)]
 
-  (main-layout
-   [mui/t {:variant 'h4
-           :key     :session-title} sid]
-   [:div {:key   :player-container
-          :id    :player-container
-          :style {:position         'relative
-                  :transform-origin "0 0"
-                  :overflow         'hidden}}
-    [:iframe {:src         "/player"
-              :key         :player-frame
-              :id          :player-frame
-              :scrolling   'no
-              :frameBorder 1
-              :style       {:pointer-events   'none
-                            :position         'relative
-                            :width            "100%"
-                            :height           "100%"}
-              :onLoad      (fn [] (st/get-session! sid #(p/handle-player-load %)))}]
-    [mui/pointer {:key   :pointer
-                  :id    :pointer
-                  :style {:position  'absolute
-                          :transition "all .1s linear"
-                          :top        -30
-                          :left       -30}}]])))
+    (main-layout
+     [mui/t {:variant 'h4
+             :key     :session-title} sid]
+     [:div {:key   :player-container
+            :id    :player-container
+            :style {:position         'relative
+                    :transform-origin "0 0"
+                    :overflow         'hidden}}
+      [:iframe {:src         "/player"
+                :key         :player-frame
+                :id          :player-frame
+                :scrolling   'no
+                :frameBorder 1
+                :style       {:pointer-events 'none
+                              :position       'relative
+                              :width          "100%"
+                              :height         "100%"}
+                :onLoad      (fn [] (st/get-session! sid #(p/handle-player-load %)))}]
+      [mui/pointer {:key   :pointer
+                    :id    :pointer
+                    :style {:position   'absolute
+                            :transition "all .1s linear"
+                            :top        (:y pointer)
+                            :left       (:x pointer)}}]])))
 
 (sec/defroute "/" [] (st/set-page! #'sessions-page))
 

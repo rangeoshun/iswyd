@@ -78,11 +78,8 @@
   (.getElementById js/document "pointer"))
 
 (defn move-pointer [event]
-  (let [pointer (pointer)
-        style   (.-style pointer)]
-
-    (aset style "left" (str (aget event "x") "px"))
-    (aset style "top" (str (aget event "y") "px"))))
+  (st/pointer! {:x (aget event "x")
+                :y (aget event "y")}))
 
 (defn handle-player-message [ev]
   (let [event (aget ev "data")]
