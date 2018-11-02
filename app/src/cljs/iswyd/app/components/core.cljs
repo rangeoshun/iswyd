@@ -19,12 +19,16 @@
    [mui/table {}
     [mui/thead {}
      [mui/trow {}
+      [mui/tcell]
       [mui/tcell {} "Session ID"]
       [mui/tcell {} "OS"]
       [mui/tcell {} "Browser"]]]
     [mui/tbody {}
      (map (fn [session]
             [mui/trow {:key (:session_id session)}
+             [mui/tcell {} [:a {:href (str "/sessions/" (:session_id session))}
+                            [mui/icon-button {}
+                             [mui/launch-icon]]]]
              [mui/tcell {} (:session_id session)]
              [mui/tcell {} (ua-os session)]
              [mui/tcell {} (ua-browser session)]])
