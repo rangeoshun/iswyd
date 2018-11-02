@@ -69,19 +69,32 @@
                :height (:height event)
                :scale  (player-ratio event)}))
 
-(defn pointer []
+(defn mouse-event [type]
+  (let [event (.createEvent js/document "MouseEvents")]
+    (.initMouseEvent event type true true js/window)
+    event))
+
+(defn pointer-touch []
   (.getElementById js/document "pointer"))
 
 (defn move-pointer [event]
   (st/pointer! {:x (:x event)
                 :y (:y event)}))
 
+(defn down-pointer [event]
+  (.dispatchEvent (pointer-touch) (mouse-event "mousedown"))
+  (move-pointer event))
+
+(defn up-pointer [event]
+  (.dispatchEvent (pointer-touch) (mouse-event "mouseup"))
+  (move-pointer event))
+
 (defn handle-player-message [event]
   (case (:type event)
     "resize" (resize-player event)
     "move"   (move-pointer event)
-    "down"   (move-pointer event)
-    "up"     (move-pointer event)
+    "down"   (down-pointer event)
+    "up"     (up-pointer event)
     nil))
 
 (defn handle-player-load [events]
@@ -92,5 +105,4 @@
     (js/addEventListener "message" #(handle-player-message
                                      (js->clj (aget % "data") :keywordize-keys true)))
     (js/addEventListener "resize" #(resize-player (st/window)))
-    ;; (resize-player (clj->js (first (filter #(= "resize" (:type %)) events))))
     (decode-events events)))

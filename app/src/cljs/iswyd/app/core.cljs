@@ -35,17 +35,6 @@
      [mui/grid {:item true}
       [mui/t {:variant 'h5} "( aɪzwʌɪd )"]]]]])
 
-(defn session-paper []
-  [mui/paper {:key :session-paper}
-   [mui/list {:component 'nav}
-    (doall (map (fn [session]
-                  (let [sid (:session_id session)]
-
-                    [mui/list-item {:button true :key sid}
-                     [:a {:href (str "/sessions/" sid)}
-                      [mui/t {:variant 'h6} sid]]]))
-                (st/sessions-list)))]])
-
 (defn main-layout [& content]
   [mui/css-baseline
    [mui/theme-provider {:theme theme}
@@ -99,12 +88,13 @@
                               :width          "100%"
                               :height         "100%"}
                 :onLoad      (fn [] (st/get-session! sid #(p/handle-player-load %)))}]
-      [mui/pointer {:key   :pointer
-                    :id    :pointer
-                    :style {:position   'absolute
-                            :transition "all .1s linear"
-                            :top        (:y pointer)
-                            :left       (:x pointer)}}]])))
+      [mui/pointer {:key          :pointer
+                    :id           :pointer
+                    :centerRipple true
+                    :style        {:position   'absolute
+                                   :transition "all .1s linear"
+                                   :top        (:y pointer)
+                                   :left       (:x pointer)}}]])))
 
 (sec/defroute "/" [] (st/set-page! #'sessions-page))
 

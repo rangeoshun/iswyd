@@ -20,7 +20,7 @@
 
 (def link (r/adapt-react-class (.-Button mui)))
 
-(def list (r/adapt-react-class (.-List mui)))
+;; (def list (r/adapt-react-class (.-List mui)))
 
 (def list-item (r/adapt-react-class (.-ListItem mui)))
 
@@ -33,6 +33,8 @@
 (def text-field (r/adapt-react-class (.-TextField mui)))
 
 (def toolbar (r/adapt-react-class (.-Toolbar mui)))
+
+(def button (r/adapt-react-class (.-Button mui)))
 
 (def popover (r/adapt-react-class (.-Popover mui)))
 
@@ -52,20 +54,35 @@
 (def thead (r/adapt-react-class (.-TableHead mui)))
 (def trow (r/adapt-react-class (.-TableRow mui)))
 
-(defn pointer [props]
+(defn pointer-icon [props]
   [svg-icon (merge props {:viewBox "8 6 24 24"})
    [:polygon {:fill   "#FFFFFF"
               :points "8.2,20.9 8.2,4.9 19.8,16.5 13,16.5 12.6,16.6 "}]
    [:polygon {:fill   "#FFFFFF"
               :points "17.3,21.6 13.7,23.1 9,12 12.7,10.5 "}]
-   [:rect {:x "12.5"
-           :y "13.6"
-           :transform"matrix(0.9221 -0.3871 0.3871 0.9221 -5.7605 6.5909)"
-           :width "2"
-           :height "8"}]
+   [:rect {:x         "12.5"
+           :y         "13.6"
+           :transform "matrix(0.9221 -0.3871 0.3871 0.9221 -5.7605 6.5909)"
+           :width     "2"
+           :height    "8"}]
    [:polygon {:points "9.2,7.3 9.2,18.5 12.2,15.6 12.6,15.5 17.4,15.5 "}]])
 
+(defn pointer [props]
+  [button (merge-with merge
+                      {:style {:background-color "rgba(0, 0, 0, 0.08)"
+                               :poistion         'absolute
+                               :min-width        24
+                               :min-height       24
+                               :margin-top       -12
+                               :margin-left      -12
+                               :padding          0
+                               :border-radius    12}}
+                      (or props {}))
+   [pointer-icon {:style {:position 'absolute
+                          :top      "50%"
+                          :left     "50%"}}]])
+
 (defn launch-icon [props]
-  [svg-icon {}
+  [svg-icon props
    [:path {:d "M0 0h24v24H0z" :fill "none"}]
    [:path {:d "M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"}]])
