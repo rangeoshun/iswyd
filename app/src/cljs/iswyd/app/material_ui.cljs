@@ -5,23 +5,37 @@
 (def mui js/MaterialUI)
 
 (def create-theme (.-createMuiTheme mui))
+
 (def create-generate-class-name (.-createGenerateClassName mui))
 
 (def theme-provider (r/adapt-react-class (.-MuiThemeProvider mui)))
+
 (def css-baseline (r/adapt-react-class (.-CssBaseline mui)))
 
 (def app-bar (r/adapt-react-class (.-AppBar mui)))
-(def toolbar (r/adapt-react-class (.-Toolbar mui)))
-(def t (r/adapt-react-class (.-Typography mui)))
+
 (def label (r/adapt-react-class (.-FormLabel mui)))
+
 (def link (r/adapt-react-class (.-Button mui)))
+
 (def list (r/adapt-react-class (.-List mui)))
+
 (def list-item (r/adapt-react-class (.-ListItem mui)))
-(def text-field (r/adapt-react-class (.-TextField mui)))
-(def popover (r/adapt-react-class (.-Popover mui)))
-(def paper (r/adapt-react-class (.-Paper mui)))
+
 (def menu-list (r/adapt-react-class (.-MenuList mui)))
+
 (def menu-item (r/adapt-react-class (.-MenuItem mui)))
+
+(def t (r/adapt-react-class (.-Typography mui)))
+
+(def text-field (r/adapt-react-class (.-TextField mui)))
+
+(def toolbar (r/adapt-react-class (.-Toolbar mui)))
+
+(def popover (r/adapt-react-class (.-Popover mui)))
+
+(def paper (r/adapt-react-class (.-Paper mui)))
+
 (def spinner (r/adapt-react-class (.-CircularProgress mui)))
 
 (def grid (r/adapt-react-class (.-Grid mui)))
@@ -29,6 +43,12 @@
 (def grow (r/adapt-react-class (.-Grow mui)))
 
 (def svg-icon (r/adapt-react-class (.-SvgIcon mui)))
+
+(def table (r/adapt-react-class (.-Table mui)))
+(def tcell (r/adapt-react-class (.-TableCell mui)))
+(def tbody (r/adapt-react-class (.-TableBody mui)))
+(def thead (r/adapt-react-class (.-TableHead mui)))
+(def trow (r/adapt-react-class (.-TableRow mui)))
 
 (defn pointer [props]
   [svg-icon (merge props {:viewBox "8 6 24 24"})

@@ -1,5 +1,6 @@
 (ns iswyd.app.core
   (:require [accountant.core :as acc]
+            [iswyd.app.components.core :as ic]
             [iswyd.app.material-ui :as mui]
             [iswyd.app.state :as st]
             [iswyd.app.player :as p]
@@ -17,7 +18,11 @@
                                                   :main          "#f44336"
                                                   :dark          "#ba000d"
                                                   :contrast-text "#000000"}}
-                         :typography {:useNextVariants true}}))
+                         :spacing    {:unit spacing}
+                         :typography {:useNextVariants true}
+                         :overrides  {:MuiTypography
+                                      {:h4 {:padding-top    spacing
+                                            :padding-bottom spacing}}}}))
 
 (def theme (mui/create-theme theme-map))
 
@@ -66,7 +71,7 @@
   (main-layout
    [mui/t {:variant 'h4
            :key     :session-title} "Sessions"]
-    (session-paper)))
+    (ic/sessions-table)))
 
 (defn solo-session-page [params]
   (let [sid (st/session-id)]
