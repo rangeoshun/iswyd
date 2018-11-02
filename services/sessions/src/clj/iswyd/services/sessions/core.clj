@@ -20,8 +20,7 @@
    :body   (json/write-str {:success true
                             :data    (mc/find-maps db coll {} {:_id        0
                                                                :events     0
-                                                               :changes    0
-                                                               :user_agent 0})})})
+                                                               :changes    0})})})
 
 (defn solo-handler [request]
   (let [session (mc/find-one-as-map
