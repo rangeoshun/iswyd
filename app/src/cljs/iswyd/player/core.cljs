@@ -52,7 +52,7 @@
     (if-not mark
       (js/scrollTo x y))))
 
-(defn play-next! []
+(defn play-next! [delay]
   (if (and (= (st/state) :playing)
            (< (st/seek) (st/event-count)))
 
@@ -62,12 +62,12 @@
           pdelta (if (> index 0)
                    (:delta (st/event-at (dec index)))
                    0)
-          type  (:type event)]
+          type  (:type event)
+          start   (.now js/Date)]
 
       (js/setTimeout
        (fn []
-         (st/inc-seek!)
-         (play-next!)
+         ()
          (case type
            "change" (handle-change event)
            "move"   (send-top event)
@@ -75,8 +75,10 @@
            "up"     (send-top event)
            "resize" (send-top event)
            "scroll" (handle-scroll event)
-           (.log js/console (str "Unrecognized event type: " type))))
-       (- delta pdelta)))))
+           (.log js/console (str "Unrecognized event type: " type)))
+         (st/inc-seek!)
+         (play-next! (- (.now js/Date) start)))
+       (- delta pdelta delay)))))
 
 (defn play-events! [events]
   (st/unload!)
@@ -86,7 +88,7 @@
   (st/events! events)
   (st/state! :playing)
 
-  (play-next!))
+  (play-next! 0))
 
 (defn handle-command [command]
   (let [type (:type command)]
