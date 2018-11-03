@@ -65,35 +65,41 @@
 (defn solo-session-page [params]
   (let [sid     (st/session-id)
         pointer (st/pointer)
+        wrapper (st/wrapper)
         window  (st/window)]
 
     (main-layout
-     [mui/t {:variant 'h4
-             :key     :session-title} sid]
-     [:div {:key   :player-container
-            :id    :player-container
+     [:div {:key   :player-wrapper
             :style {:position         'relative
-                    :transform-origin "0 0"
-                    :width            (:width window)
-                    :height           (:height window)
-                    :transform        (str "scale(" (:scale window) ")")
+                    :width            "100%"
+                    :height           (:height wrapper)
                     :overflow         'hidden}}
-      [:iframe {:src         "/player"
-                :key         :player-frame
-                :id          :player-frame
-                :scrolling   'no
-                :frameBorder 1
-                :style       {:pointer-events 'none
-                              :position       'relative
-                              :width          "100%"
-                              :height         "100%"}
-                :onLoad      (fn [] (st/get-session! sid #(p/handle-player-load %)))}]
-      [mui/pointer {:key          :pointer
-                    :id           :pointer
-                    :style        {:position   'absolute
-                                   :transition "top .1s linear left .1s linear"
-                                   :top        (:y pointer)
-                                   :left       (:x pointer)}}]])))
+      [:div {:key   :player-container
+             :id    :player-container
+             :style {:position         'relative
+                     :transform-origin "0 0"
+                     :width            (:width window)
+                     :height           (:height window)
+                     :transform        (str "scale(" (:scale window) ")")
+                     :overflow         'hidden}}
+       [:iframe {:src         "/player"
+                 :key         :player-frame
+                 :id          :player-frame
+                 :scrolling   'no
+                 :frameBorder 1
+                 :style       {:pointer-events 'none
+                               :position       'relative
+                               :width          "100%"
+                               :height         "100%"}
+                 :onLoad      (fn [] (st/get-session! sid #(p/handle-player-load %)))}]
+       [mui/pointer {:key          :pointer
+                     :id           :pointer
+                     :style        {:position   'absolute
+                                    :transition "top .1s linear left .1s linear"
+                                    :top        (:y pointer)
+                                    :left       (:x pointer)}}]]]
+     [mui/t {:variant 'caption
+             :key     :session-id} sid])))
 
 (sec/defroute "/" [] (st/set-page! #'sessions-page))
 

@@ -13,6 +13,7 @@
                         :player   {:html      nil
                                    :last-time nil
                                    :seek      nil
+                                   :wrapper   {:height 0}
                                    :window    {:width  0
                                                :height 0}
                                    :pointer   {:x -30
@@ -122,4 +123,11 @@
   (get-in @state [:player :window]))
 
 (defn window! [win]
+  (let [scale (:scale win)
+        wscale (if (> scale 0) scale 1)]
+
+    (swap! state assoc-in [:player :wrapper :height] (* scale (:height win))))
   (swap! state assoc-in [:player :window] win))
+
+(defn wrapper []
+  (get-in @state [:player :wrapper]))
