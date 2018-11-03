@@ -77,7 +77,7 @@
                        (swap! state assoc-in [:session :loading?] false))))))))
 
 (defn html []
-  (or (get-in @state [:player :html]) ""))
+  (or (get-in @state [:player :html]) (str)))
 
 (defn load? []
   (get-in @state [:player :load]))

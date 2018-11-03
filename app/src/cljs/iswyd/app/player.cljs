@@ -59,22 +59,24 @@
 (defn sanitize-html [html]
   (-> html
       ;; Add scroll smoother CSS
-      (.replace #"<head>" (str "<head>" css))
+      ;; (.replace #"<head>" (str "<head>\\n" css))
       ;; Remove title as that's not displayed and minimizes style reflow in head
-      (.replace #"<title>.{0,}</title>" "")
+      ;; (.replace #"<title>.{0,}</title>" "")
       ;; Remove strange attribute "%" first seen on github.com
       (.replace (js/RegExp "%=\"\"" "g")"")))
 
 (defn ddiff [event]
-  (let [old-doc  (.parseFromString parser (sanitize-html (st/html)) "text/html")
+  (let [old-doc  (.parseFromString parser (st/html) "text/html")
         old-head (.-head old-doc)
         old-body (.-body old-doc)
-        new-doc  (.parseFromString parser (sanitize-html (:html event)) "text/html")
+        html     (sanitize-html (:html event))
+        new-doc  (.parseFromString parser html "text/html")
         new-head (.-head new-doc)
         new-body (.-body new-doc)]
 
     (merge event
-           {:diff {:head (.diff dd old-head new-head)
+           {:html html
+            :diff {:head (.diff dd old-head new-head)
                    :body (.diff dd old-body new-body)}})))
 
 (defn worker-cb [msg]
