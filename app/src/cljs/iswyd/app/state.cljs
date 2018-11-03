@@ -9,9 +9,12 @@
                                    :user-agent nil}
                         :sessions {:loading? false
                                    :list     []
+                                   :decoded  false
                                    :time     nil}
-                        :player   {:html    nil
+                        :player   {:state   nil
+                                   :html    nil
                                    :seek    nil
+                                   :load    false
                                    :wrapper {:height 0}
                                    :window  {:width  0
                                              :height 0}
@@ -62,6 +65,7 @@
     (do
       (swap! state assoc-in [:session :loading?] true)
       (swap! state assoc-in [:session :events] nil)
+      (swap! state assoc-in [:session :user-agent] nil)
       (html! "")
       (let [req (api/get-session sid)]
         (.then req (fn [_res]
@@ -74,6 +78,15 @@
 
 (defn html []
   (or (get-in @state [:player :html]) ""))
+
+(defn load? []
+  (get-in @state [:player :load]))
+
+(defn load! []
+  (swap! state assoc-in [:player :load] true))
+
+(defn unload! []
+  (swap! state assoc-in [:player :load] false))
 
 (defn last-time! [time]
   (swap! state assoc-in [:player :last-time] time))
@@ -134,3 +147,9 @@
 
 (defn wrapper []
   (get-in @state [:player :wrapper]))
+
+(defn player-state []
+  (get-in @state [:player :state]))
+
+(defn player-state! [new-state]
+  (swap! state assoc-in [:player :state] new-state))

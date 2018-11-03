@@ -14,7 +14,7 @@
   (.postMessage player (clj->js events) "*"))
 
 (defn play-events [player index]
-  (post-player player {:type "play"
+  (post-player player {:type "load"
                        :events (st/events-from index)}))
 
 (defn player-container []
@@ -63,7 +63,7 @@
       ;; Remove title as that's not displayed and minimizes style reflow in head
       (.replace #"<title>.{0,}</title>" "")
       ;; Remove strange attribute "%" first seen on github.com
-      (.replace (js/RegExp "(<.{0,})(%=\".{0,}\")(.{0,}>)" "g")"$1$3")))
+      (.replace (js/RegExp "%=\"\"" "g")"")))
 
 (defn ddiff [event]
   (let [old-doc  (.parseFromString parser (sanitize-html (st/html)) "text/html")
@@ -118,6 +118,23 @@
 (defn handle-seek [event]
   (st/seek! (:value event)))
 
+(defn player-state! [new-state]
+  (st/player-state! new-state)
+  (post-player (player-window) {:type  "state"
+                                :value new-state}))
+
+(defn loading? []
+  (= (st/player-state) "loading"))
+
+(defn playing? []
+  (= (st/player-state) "playing"))
+
+(defn pause! []
+  (player-state! "paused"))
+
+(defn play! []
+  (player-state! "playing"))
+
 (defn handle-player-message [event]
   (let [type (:type event)]
 
@@ -127,9 +144,11 @@
       "down"   (down-pointer event)
       "up"     (up-pointer event)
       "seek"   (handle-seek event)
+      "state"  (st/player-state! (:value event))
       (.log js/console (str "Unrecognized event type: " type)))))
 
 (defn handle-player-load [events]
+  (.log js/console "Player loaded, starting to decode...")
   (let [player (player-window)
         ;; FIXME: Find out why does an empty object get postetd in events
         events  (filter #(contains? % :time) events)]

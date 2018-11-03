@@ -36,7 +36,7 @@
       (js/scrollTo x y))))
 
 (defn play-next! []
-  (if (and (= (st/state) :playing)
+  (if (and (= (st/state) "playing")
            (< (st/seek) (st/event-count)))
 
     (let [index (st/seek)
@@ -69,15 +69,26 @@
     (st/seek! 0))
 
   (st/events! events)
-  (st/state! :playing)
-
+  (st/state! "playing")
+  (post-parent {:type  "state"
+                :value "playing"})
   (play-next!))
+
+(defn handle-state [event]
+  (let [value (:value event)
+        curr  (st/state)]
+
+    (st/state! value)
+    (if (and (= curr "paused")
+             (= value "playing"))
+      (play-next!))))
 
 (defn handle-command [command]
   (let [type (:type command)]
 
     (case type
-      "play" (play-events! (:events command))
+      "load"  (play-events! (:events command))
+      "state" (handle-state command)
       (.log js/console (str "Unrecognized command type: " type)))))
 
 (defn main []

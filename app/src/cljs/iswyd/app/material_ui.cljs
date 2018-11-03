@@ -71,23 +71,19 @@
            :height    "8"}]
    [:polygon {:points "9.2,7.3 9.2,18.5 12.2,15.6 12.6,15.5 17.4,15.5 "}]])
 
-;; FIXME: Fix click riple position to be centered
-(defn pointer [props]
-  [:div (merge-with merge {} (or props {}))
-   [button-base {:style {:id               :pointer-button
-                         :background-color "rgba(0, 0, 0, 0.08)"
-                         :poistion         'absolute
-                         :min-width        24
-                         :min-height       24
-                         ;; :margin-top       -12
-                         ;; :margin-left      -12
-                         :padding          0
-                         :border-radius    12}}
-    [pointer-icon {:style {:position 'absolute
-                           :top      "50%"
-                           :left     "50%"}}]]])
-
 (defn launch-icon [props]
   [svg-icon props
    [:path {:d "M0 0h24v24H0z" :fill "none"}]
    [:path {:d "M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"}]])
+
+(defn pause-icon [props]
+  [svg-icon {}
+   [:path {:fill "none"
+           :d "M0 0h24v24H0V0z"}]
+   [:path {:d "M6 19h4V5H6v14zm8-14v14h4V5h-4z"}]])
+
+(defn play-icon [props]
+  [svg-icon {}
+   [:path {:fill "none"
+           :d "M0 0h24v24H0V0z"}]
+   [:path {:d "M8 5v14l11-7L8 5z"}]])

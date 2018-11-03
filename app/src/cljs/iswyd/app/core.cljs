@@ -64,7 +64,6 @@
 
 (defn solo-session-page [params]
   (let [sid     (st/session-id)
-        pointer (st/pointer)
         wrapper (st/wrapper)
         window  (st/window)]
 
@@ -74,6 +73,7 @@
                  :style  {:position 'relative
                           :width    "100%"
                           :height   (:height wrapper)
+                          :transition "height 0.3s ease-out"
                           :overflow 'hidden}}
       [:div {:key   :player-container
              :id    :player-container
@@ -92,23 +92,35 @@
                                :position       'relative
                                :width          "100%"
                                :height         "100%"}
-                 :onLoad      (fn [] (st/get-session! sid #(p/handle-player-load %)))}]
-       [mui/pointer {:key   :pointer
-                     :id    :pointer
-                     :style {:position   'absolute
-                             :transition "top .1s linear left .1s linear"
-                             :top        (:y pointer)
-                             :left       (:x pointer)}}]]]
+                 :onLoad      (fn [ev]
+                                (if-not (st/load?)
+                                  (do
+                                    (st/load!)
+                                    (st/get-session! sid #(p/handle-player-load %)))))}]
+       [ic/pointer {:key :pointer
+                    :id  :pointer}]]]
      [mui/paper {:key :progress-container}
-      [mui/lprogress {:variant 'determinate
+      [mui/lprogress {:variant (if-not (p/loading?)
+                                 'determinate
+                                 'indeterminate)
                       :color   'secondary
-                      :value   (st/seek-perc)}]])))
+                      :value   (st/seek-perc)}]
+      (cond
+        (p/playing?) [mui/icon-button {:onClick #(p/pause!)}
+                      [mui/pause-icon]]
+        :else        [mui/icon-button {:disabled (p/loading?)
+                                       :onClick  #(p/play!)}
+                      [mui/play-icon]])])))
 
 (sec/defroute "/" [] (st/set-page! #'sessions-page))
 
 (sec/defroute "/sessions" [] (st/set-page! #'sessions-page))
 (sec/defroute "/sessions/:sid" {:as params}
   (do
+    (st/unload!)
+    (st/player-state! "loading")
+    (st/window! {:width  0
+                 :height 0})
     (st/set-session! (:sid params))
     (st/set-page! #'solo-session-page)))
 
