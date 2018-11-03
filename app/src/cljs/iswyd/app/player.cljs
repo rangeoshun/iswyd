@@ -1,5 +1,8 @@
 (ns iswyd.app.player
   (:require [cljsjs.diffdom]
+            [iswyd.app.components.core :as ic]
+
+            [iswyd.app.material-ui :as mui]
             [iswyd.app.state :as st]))
 
 (defonce dd (js/diffDOM.))
@@ -10,21 +13,21 @@
 
 (defonce worker (init-worker!))
 
-(defn post-player [player events]
-  (.postMessage player (clj->js events) "*"))
-
-(defn play-events [player index]
-  (post-player player {:type "load"
-                       :events (st/events-from index)}))
-
-(defn player-container []
-  (.getElementById js/document "player-container"))
-
 (defn player-frame []
   (.getElementById js/document "player-frame"))
 
 (defn player-window []
   (.-contentWindow (player-frame)))
+
+(defn post-player! [event]
+  (.postMessage (player-window) (clj->js event) "*"))
+
+(defn play-events [index]
+  (post-player! {:type "load"
+                 :events (st/events-from index)}))
+
+(defn player-container []
+  (.getElementById js/document "player-container"))
 
 (defn patch-apply [event index]
   (let [prev (st/html)]
@@ -44,7 +47,7 @@
     (cond
       (>= index (st/count-events)) (do
                                      (.log js/console "Finished decoding, start playback...")
-                                     (play-events (player-window) 0))
+                                     (play-events 0))
       (= "change" (:type event)) (patch-apply event index)
       :else (do
               (st/update-event! event index)
@@ -122,8 +125,8 @@
 
 (defn player-state! [new-state]
   (st/player-state! new-state)
-  (post-player (player-window) {:type  "state"
-                                :value new-state}))
+  (post-player! {:type  "state"
+                 :value new-state}))
 
 (defn loading? []
   (= (st/player-state) "loading"))
@@ -147,13 +150,12 @@
       "up"     (up-pointer event)
       "seek"   (handle-seek event)
       "state"  (st/player-state! (:value event))
-      (.log js/console (str "Unrecognized event type: " type)))))
+      (.log js/console (str "Unrecognized event type: " type) event))))
 
 (defn handle-player-load [events]
   (.log js/console "Player loaded, starting to decode...")
-  (let [player (player-window)
-        ;; FIXME: Find out why does an empty object get postetd in events
-        events  (filter #(contains? % :time) events)]
+  ;; FIXME: Find out why does an empty object get postetd in events
+  (let [events  (filter #(contains? % :time) events)]
 
     (js/addEventListener "message" #(handle-player-message
                                      (js->clj (aget % "data") :keywordize-keys true)))

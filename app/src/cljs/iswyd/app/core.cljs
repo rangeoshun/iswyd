@@ -92,7 +92,7 @@
                                :position       'relative
                                :width          "100%"
                                :height         "100%"}
-                 :onLoad      (fn [ev]
+                 :onLoad      (fn []
                                 (if-not (st/load?)
                                   (do
                                     (st/load!)
