@@ -1,5 +1,9 @@
 (ns iswyd.app.player
-  (:require [iswyd.app.state :as st]))
+  (:require [cljsjs.diffdom]
+            [iswyd.app.state :as st]))
+
+(defonce dd (js/diffDOM.))
+(defonce parser (js/DOMParser.))
 
 (defn init-worker! []
   (js/Worker. "/js/worker.js"))
@@ -38,22 +42,47 @@
 (defn decode-event [index]
   (let [event (st/event-at index)]
     (cond
-      (>= index (st/count-events)) (play-events (player-window) 0)
+      (>= index (st/count-events)) (do
+                                     (.log js/console "Finished decoding, start playback...")
+                                     (play-events (player-window) 0))
       (= "change" (:type event)) (patch-apply event index)
       :else (do
-              (st/update-event! (clj->js event) index)
+              (st/update-event! event index)
               (decode-event (inc index))))))
 
 (defn decode-events [events]
   (st/session-events! events)
   (decode-event 0))
 
+(defonce css "<style>* { scroll-behavior: smooth; margin: 0; padding: 0;}</style>")
+
+(defn sanitize-html [html]
+  (-> html
+      ;; Add scroll smoother CSS
+      (.replace #"<head>" (str "<head>" css))
+      ;; Remove title as that's not displayed and minimizes style reflow in head
+      (.replace #"<title>.{0,}</title>" "")
+      ;; Remove strange attribute "%" first seen on github.com
+      (.replace (js/RegExp "(<.{0,})(%=\".{0,}\")(.{0,}>)" "g")"$1$3")))
+
+(defn ddiff [event]
+  (let [old-doc  (.parseFromString parser (sanitize-html (st/html)) "text/html")
+        old-head (.-head old-doc)
+        old-body (.-body old-doc)
+        new-doc  (.parseFromString parser (sanitize-html (:html event)) "text/html")
+        new-head (.-head new-doc)
+        new-body (.-body new-doc)]
+
+    (merge event
+           {:diff {:head (.diff dd old-head new-head)
+                   :body (.diff dd old-body new-body)}})))
+
 (defn worker-cb [msg]
   (let [data  (aget msg "data")
-        event (aget data 1)
+        event (js->clj (aget data 1) :keywordize-keys true)
         index (aget data 2)]
 
-    (st/update-event! event index)
+    (st/update-event! (ddiff event) index)
     (decode-event (inc index))))
 
 (set! (.-onmessage worker) #(worker-cb %))
@@ -68,28 +97,37 @@
     (.initMouseEvent event type true true js/window)
     event))
 
-(defn pointer-touch []
+(defn pointer-node []
   (.getElementById js/document "pointer"))
+
+(defn pointer-button []
+  (.getElementById js/document "pointer-button"))
 
 (defn move-pointer [event]
   (st/pointer! {:x (:x event)
                 :y (:y event)}))
 
 (defn down-pointer [event]
-  (.dispatchEvent (pointer-touch) (mouse-event "mousedown"))
+  (.dispatchEvent (pointer-button) (mouse-event "mousedown"))
   (move-pointer event))
 
 (defn up-pointer [event]
-  (.dispatchEvent (pointer-touch) (mouse-event "mouseup"))
+  (.dispatchEvent (pointer-button) (mouse-event "mouseup"))
   (move-pointer event))
 
+(defn handle-seek [event]
+  (st/seek! (:value event)))
+
 (defn handle-player-message [event]
-  (case (:type event)
-    "resize" (resize-player event)
-    "move"   (move-pointer event)
-    "down"   (down-pointer event)
-    "up"     (up-pointer event)
-    nil))
+  (let [type (:type event)]
+
+    (case type
+      "resize" (resize-player event)
+      "move"   (move-pointer event)
+      "down"   (down-pointer event)
+      "up"     (up-pointer event)
+      "seek"   (handle-seek event)
+      (.log js/console (str "Unrecognized event type: " type)))))
 
 (defn handle-player-load [events]
   (let [player (player-window)

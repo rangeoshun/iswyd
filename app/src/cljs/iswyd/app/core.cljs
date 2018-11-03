@@ -21,8 +21,7 @@
                          :spacing    {:unit spacing}
                          :typography {:useNextVariants true}
                          :overrides  {:MuiTypography
-                                      {:h4 {:padding-top    spacing
-                                            :padding-bottom spacing}}}}))
+                                      {:h4 {:margin-bottom spacing}}}}))
 
 (def theme (mui/create-theme theme-map))
 
@@ -46,7 +45,8 @@
      (conj [mui/grid {:item  true
                       :xs    12
                       :md    10
-                      :style {:position 'relative}}]
+                      :style {:position    'relative
+                              :padding-top padding}}]
            content)]]])
 
 (defn about-page []
@@ -69,11 +69,12 @@
         window  (st/window)]
 
     (main-layout
-     [:div {:key   :player-wrapper
-            :style {:position         'relative
-                    :width            "100%"
-                    :height           (:height wrapper)
-                    :overflow         'hidden}}
+     [mui/paper {:key    :player-wrapper
+                 :square true
+                 :style  {:position 'relative
+                          :width    "100%"
+                          :height   (:height wrapper)
+                          :overflow 'hidden}}
       [:div {:key   :player-container
              :id    :player-container
              :style {:position         'relative
@@ -86,20 +87,22 @@
                  :key         :player-frame
                  :id          :player-frame
                  :scrolling   'no
-                 :frameBorder 1
+                 :frameBorder 0
                  :style       {:pointer-events 'none
                                :position       'relative
                                :width          "100%"
                                :height         "100%"}
                  :onLoad      (fn [] (st/get-session! sid #(p/handle-player-load %)))}]
-       [mui/pointer {:key          :pointer
-                     :id           :pointer
-                     :style        {:position   'absolute
-                                    :transition "top .1s linear left .1s linear"
-                                    :top        (:y pointer)
-                                    :left       (:x pointer)}}]]]
-     [mui/t {:variant 'caption
-             :key     :session-id} sid])))
+       [mui/pointer {:key   :pointer
+                     :id    :pointer
+                     :style {:position   'absolute
+                             :transition "top .1s linear left .1s linear"
+                             :top        (:y pointer)
+                             :left       (:x pointer)}}]]]
+     [mui/paper {:key :progress-container}
+      [mui/lprogress {:variant 'determinate
+                      :color   'secondary
+                      :value   (st/seek-perc)}]])))
 
 (sec/defroute "/" [] (st/set-page! #'sessions-page))
 

@@ -2,7 +2,7 @@
   (:require [reagent.core :as r]
             [material-ui]))
 
-(defonce mui js/MaterialUI)
+(def mui js/MaterialUI)
 
 (def create-theme (.-createMuiTheme mui))
 
@@ -38,6 +38,8 @@
 
 (def button-base (r/adapt-react-class (.-ButtonBase mui)))
 
+(def lprogress (r/adapt-react-class (.-LinearProgress mui)))
+
 (def popover (r/adapt-react-class (.-Popover mui)))
 
 (def paper (r/adapt-react-class (.-Paper mui)))
@@ -71,19 +73,19 @@
 
 ;; FIXME: Fix click riple position to be centered
 (defn pointer [props]
-  [button-base (merge-with merge
-                           {:style {:background-color "rgba(0, 0, 0, 0.08)"
-                                    :poistion         'absolute
-                                    :min-width        24
-                                    :min-height       24
-                                    :margin-top       -12
-                                    :margin-left      -12
-                                    :padding          0
-                                    :border-radius    12}}
-                           (or props {}))
-   [pointer-icon {:style {:position 'absolute
-                          :top      "50%"
-                          :left     "50%"}}]])
+  [:div (merge-with merge {} (or props {}))
+   [button-base {:style {:id               :pointer-button
+                         :background-color "rgba(0, 0, 0, 0.08)"
+                         :poistion         'absolute
+                         :min-width        24
+                         :min-height       24
+                         ;; :margin-top       -12
+                         ;; :margin-left      -12
+                         :padding          0
+                         :border-radius    12}}
+    [pointer-icon {:style {:position 'absolute
+                           :top      "50%"
+                           :left     "50%"}}]]])
 
 (defn launch-icon [props]
   [svg-icon props

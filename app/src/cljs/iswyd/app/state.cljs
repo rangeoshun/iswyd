@@ -10,14 +10,13 @@
                         :sessions {:loading? false
                                    :list     []
                                    :time     nil}
-                        :player   {:html      nil
-                                   :last-time nil
-                                   :seek      nil
-                                   :wrapper   {:height 0}
-                                   :window    {:width  0
-                                               :height 0}
-                                   :pointer   {:x -30
-                                               :y -30}}}))
+                        :player   {:html    nil
+                                   :seek    nil
+                                   :wrapper {:height 0}
+                                   :window  {:width  0
+                                             :height 0}
+                                   :pointer {:x -30
+                                             :y -30}}}))
 
 (defn set-page! [page]
   (swap! state assoc :page page))
@@ -66,8 +65,8 @@
       (html! "")
       (let [req (api/get-session sid)]
         (.then req (fn [_res]
-                     (let [res  (js->clj _res :keywordize-keys true)
-                           data (:data res)
+                     (let [res    (js->clj _res :keywordize-keys true)
+                           data   (:data res)
                            events (sort-by (juxt :time) (:events data))]
                        (cb events)
                        (swap! state assoc-in [:session :user-agent] (:user_agent data))
@@ -86,29 +85,33 @@
   (first (session-events)))
 
 (defn zero-time []
-  (or (aget (first-event) "time") 0))
+  (or (:time (first-event)) 0))
 
 (defn session-events! [events]
   (swap! state assoc-in [:session :events] (into [] events)))
 
 (defn update-event! [event index]
-  (let [html  (aget event "html")
+  (let [html  (:html event)
         delta (if (not= index 0)
-                (- (aget event "time") (zero-time))
+                (- (:time event) (zero-time))
                 0)]
     (if html
       (html! html))
-    (aset event "delta" delta)
-    (swap! state assoc-in [:session :events index] event)))
+    (swap! state assoc-in [:session :events index] (assoc event :delta delta))))
 
 (defn event-at [index]
   (get-in (session-events) [index]))
 
-(defn set-seek! [int]
+(defn seek! [int]
   (swap! state assoc-in [:player :seek] int))
 
-(defn get-seek []
+(defn seek []
   (get-in @state [:player :seek]))
+
+(defn seek-perc []
+  (* 100
+     (/ (:delta (event-at (seek)))
+        (:delta (last-event)))))
 
 (defn count-events []
   (count (session-events)))
@@ -123,7 +126,7 @@
   (get-in @state [:player :window]))
 
 (defn window! [win]
-  (let [scale (:scale win)
+  (let [scale  (:scale win)
         wscale (if (> scale 0) scale 1)]
 
     (swap! state assoc-in [:player :wrapper :height] (* scale (:height win))))

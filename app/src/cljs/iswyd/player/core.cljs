@@ -4,18 +4,6 @@
             [iswyd.player.state :as st]))
 
 (defonce dd (js/diffDOM.))
-(defonce parser (js/DOMParser.))
-
-(defonce css "<style>* { scroll-behavior: smooth; margin: 0; padding: 0;}</style>")
-
-(defn sanitize-html [html]
-  (-> html
-      ;; Add scroll smoother CSS
-      (.replace #"<head>" (str "<head>" css))
-      ;; Remove title as that's not displayed and minimizes style reflow in head
-      (.replace #"<title>.{0,}</title>" "")
-      ;; Remove strange attribute "%" first seen on github.com
-      (.replace (js/RegExp "(<.{0,})(%=\".{0,}\")(.{0,}>)" "g")"$1$3")))
 
 (defn write-html [html]
   (doto js/document
@@ -24,24 +12,19 @@
     (.close))
   (st/load!))
 
-(defn apply-html [html]
-  (let [doc      (.parseFromString parser html "text/html")
-        old-body (.-body js/document)
-        new-body (.-body doc)
-        old-head (.-head js/document)
-        new-head (.-head doc)]
+(defn apply-diff [diff]
+  (let [body (.-body js/document)
+        head (.-head js/document)]
 
-    (.apply dd old-head (.diff dd old-head new-head))
-    (.apply dd old-body (.diff dd old-body new-body))))
+    (.apply dd head (clj->js (:head diff)))
+    (.apply dd body (clj->js (:body diff)))))
 
 (defn handle-change [event]
-  (let [html (sanitize-html (:html event))]
+  (if-not (st/load?)
+    (write-html (:html event))
+    (apply-diff (:diff event))))
 
-    (if-not (st/load?)
-      (write-html html)
-      (apply-html html))))
-
-(defn send-top [event]
+(defn post-parent [event]
   (.postMessage (.-parent js/window) (clj->js event)))
 
 (defn handle-scroll [event]
@@ -52,7 +35,7 @@
     (if-not mark
       (js/scrollTo x y))))
 
-(defn play-next! [delay]
+(defn play-next! []
   (if (and (= (st/state) :playing)
            (< (st/seek) (st/event-count)))
 
@@ -62,23 +45,23 @@
           pdelta (if (> index 0)
                    (:delta (st/event-at (dec index)))
                    0)
-          type  (:type event)
-          start   (.now js/Date)]
+          type  (:type event)]
 
       (js/setTimeout
        (fn []
-         ()
          (case type
            "change" (handle-change event)
-           "move"   (send-top event)
-           "down"   (send-top event)
-           "up"     (send-top event)
-           "resize" (send-top event)
+           "move"   (post-parent event)
+           "down"   (post-parent event)
+           "up"     (post-parent event)
+           "resize" (post-parent event)
            "scroll" (handle-scroll event)
            (.log js/console (str "Unrecognized event type: " type)))
+         (post-parent {:type  "seek"
+                       :value (st/seek)})
          (st/inc-seek!)
-         (play-next! (- (.now js/Date) start)))
-       (- delta pdelta delay)))))
+         (play-next!))
+       (- delta pdelta)))))
 
 (defn play-events! [events]
   (st/unload!)
@@ -88,7 +71,7 @@
   (st/events! events)
   (st/state! :playing)
 
-  (play-next! 0))
+  (play-next!))
 
 (defn handle-command [command]
   (let [type (:type command)]
