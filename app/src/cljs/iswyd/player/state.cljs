@@ -1,41 +1,40 @@
 (ns iswyd.player.state
   (:require [reagent.core :as r]))
 
-(defonce state (r/atom {:html      nil
-                        :last-time nil
-                        :seek      nil
-                        :changes   []}))
-
-(defn set-html! [html]
-  (swap! state assoc :html html))
-
-(defn get-html []
-  (or (:html @state) ""))
-
-(defn set-last-time! [time]
-  (swap! state assoc :last-time time))
+(defonce st (r/atom {:html     nil
+                        :seek     nil
+                        :state    :stopped
+                        :events   []}))
 
 (defn last-change []
-  (last (:changes @state)))
+  (last (:events @st)))
 
 (defn first-change []
-  (first (:changes @state)))
+  (first (:events @st)))
 
 (defn zero-time []
-  (or (aget (first-change) "time") 0))
+  (or (:time (first-change)) 0))
 
-(defn add-change! [event]
-  (set-html! (aget event "html"))
-  (swap! state assoc :changes (conj (:changes @state) event)))
+(defn event-at [at]
+  (nth (:events @st) at))
 
-(defn get-changes []
-  (:changes @state))
+(defn events! [events]
+  (swap! st assoc :events events))
 
-(defn get-change-at [at]
-  (nth (:changes @state) at))
+(defn events-count []
+  (count (:events @st)))
 
-(defn set-seek! [int]
-  (swap! state assoc :seek int))
+(defn seek []
+  (:seek @st))
 
-(defn get-seek []
-  (:seek @state))
+(defn seek! [int]
+  (swap! st assoc :seek int))
+
+(defn inc-seek! []
+  (swap! st assoc :seek (inc (seek))))
+
+(defn state []
+  (:state @st))
+
+(defn state! [new-state]
+  (swap! st assoc :state new-state))

@@ -6,18 +6,12 @@
 
 (defonce worker (init-worker!))
 
-(defn post-player-event [player ev]
-  (.postMessage player (clj->js ev) "*"))
+(defn post-player [player events]
+  (.postMessage player (clj->js events) "*"))
 
-(defn play-events [player]
-  (loop [events (st/session-events)]
-    (let [current (first events)
-          others  (rest events)]
-
-      (post-player-event player current)
-
-      (if-not (empty? others)
-        (recur others)))))
+(defn play-events [player index]
+  (post-player player {:type "play"
+                       :events (st/events-from index)}))
 
 (defn player-container []
   (.getElementById js/document "player-container"))
@@ -44,7 +38,7 @@
 (defn decode-event [index]
   (let [event (st/event-at index)]
     (cond
-      (>= index (st/count-events)) (play-events (player-window))
+      (>= index (st/count-events)) (play-events (player-window) 0)
       (= "change" (:type event)) (patch-apply event index)
       :else (do
               (st/update-event! (clj->js event) index)

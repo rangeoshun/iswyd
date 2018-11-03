@@ -51,6 +51,9 @@
 (defn session-events []
   (get-in @state [:session :events]))
 
+(defn events-from [index]
+  (subvec (session-events) index))
+
 (defn html! [html]
   (swap! state assoc-in [:player :html] html))
 

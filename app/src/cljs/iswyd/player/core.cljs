@@ -18,7 +18,7 @@
       (.replace (js/RegExp "(<.{0,})(%=\".{0,}\")(.{0,}>)" "g")"$1$3")))
 
 (defn handle-change [event]
-  (let [html     (sanitize-html (aget event "html"))
+  (let [html     (sanitize-html (:html event))
         doc      (.parseFromString parser html "text/html")
         old-body (.-body js/document)
         new-body (.-body doc)
@@ -29,22 +29,31 @@
     (.apply dd old-body (.diff dd old-body new-body))))
 
 (defn send-top [event]
-  (.postMessage (.-parent js/window) event))
+  (.postMessage (.-parent js/window) (clj->js event)))
 
 (defn handle-scroll [event]
-  (let [mark (aget event "mark")
-        x    (aget event "x")
-        y    (aget event "y")]
+  (let [mark (:mark event)
+        x    (:x event)
+        y    (:y event)]
+
     (if-not mark
       (js/scrollTo x y))))
 
-(defn handle-event [event]
-  (if (nil? (st/get-seek))
-    (st/set-seek! 0))
+(defn play-next! []
+  (let [index (st/seek)
+        event (st/event-at index)
+        delta (:delta event)
+        pdelta (if (> index 0)
+                 (:delta (st/event-at (dec index)))
+                 0)
+        type  (:type event)]
 
-    (js/setTimeout
-     (fn []
-       (let [type (aget event "type")]
+    (if (and (= (st/state) :playing)
+             event)
+      (js/setTimeout
+       (fn []
+         (st/inc-seek!)
+         (play-next!)
          (case type
            "change" (handle-change event)
            "move"   (send-top event)
@@ -52,11 +61,27 @@
            "up"     (send-top event)
            "resize" (send-top event)
            "scroll" (handle-scroll event)
-           (.log js/console (str "Unrecognized event type: " type)))))
-     (aget event "delta"))
-  (st/set-seek! (inc (st/get-seek))))
+           (.log js/console (str "Unrecognized event type: " type))))
+       (- delta pdelta)))))
+
+(defn play-events! [events]
+  (if-not (st/seek)
+    (st/seek! 0))
+
+  (st/events! events)
+  (st/state! :playing)
+
+  (play-next!))
+
+(defn handle-command [command]
+  (let [type (:type command)]
+
+    (case type
+      "play" (play-events! (:events command))
+      (.log js/console (str "Unrecognized command type: " type)))))
 
 (defn main []
-  (js/addEventListener "message" #(handle-event (aget % "data"))))
+  (js/addEventListener "message" #(handle-command
+                                   (js->clj (aget % "data") :keywordize-keys true))))
 
 (main)
