@@ -104,6 +104,8 @@
       (cond
         (p/playing?) [mui/icon-button {:onClick #(p/pause!)}
                       [mui/pause-icon]]
+        (p/stopped?) [mui/icon-button {:onClick #(p/replay!)}
+                      [mui/replay-icon]]
         :else        [mui/icon-button {:disabled (p/loading?)
                                        :onClick  #(p/play!)}
                       [mui/play-icon]])])))

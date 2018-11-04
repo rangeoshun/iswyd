@@ -1,6 +1,6 @@
 (ns iswyd.api.core)
 
-(def host "http://0.0.0.0")
+(def host (str (.-protocol js/location) "//" (.-host js/location)))
 
 (defn query [url_ data]
   (if-not (empty? data)

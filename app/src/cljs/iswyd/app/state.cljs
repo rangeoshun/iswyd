@@ -14,7 +14,7 @@
                         :player   {:state     nil
                                    :html      nil
                                    :seek      nil
-                                   :seek-perc 0
+                                   :seek-head nil
                                    :load      false
                                    :wrapper   {:height 0}
                                    :window    {:width  0
@@ -130,22 +130,24 @@
      (/ time
         (:delta (last-event)))))
 
-(defn max-seek-perc []
+(defn max-seek-head []
   (:delta (event-at (seek))))
 
 (defn tick [] 42)
 
-(defn act-seek-perc []
-  (get-in @state [:player :seek-perc]))
+(defn seek-head []
+  (get-in @state [:player :seek-head]))
 
-(defn inc-seek-perc! []
-  (swap! state assoc-in [:player :seek-perc]
-         (+ (tick) (act-seek-perc))))
+(defn seek-head! [time]
+  (swap! state assoc-in [:player :seek-head] time))
+
+(defn inc-seek-head! []
+  (seek-head! (+ (tick) (seek-head))))
 
 (defn seek-perc []
   (seek-as-perc
-   (min (max-seek-perc)
-        (act-seek-perc))))
+   (min (max-seek-head)
+        (seek-head))))
 
 (defn event-count []
   (count (session-events)))

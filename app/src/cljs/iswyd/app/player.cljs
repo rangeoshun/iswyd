@@ -44,8 +44,14 @@
 (defn playing? []
   (= (st/player-state) "playing"))
 
+(defn stopped? []
+  (= (st/player-state) "stopped"))
+
 (defn pause! []
   (st/player-state! "paused"))
+
+(defn stop! []
+  (st/player-state! "stopped"))
 
 (defn resize-player [event]
   (st/window! {:width  (:width event)
@@ -87,15 +93,14 @@
 
 (defn seek-cycle! []
   (js/setTimeout
-   #(if (playing?)
-      (do (st/inc-seek-perc!)
-          (seek-cycle)))
+   (fn []
+     (if (playing?)
+       (st/inc-seek-head!))
+     (seek-cycle!))
    (st/tick)))
 
 (defn play-next! []
-  (if (and (playing?)
-           (< (st/seek) (st/event-count)))
-
+  (if (playing?)
     (let [index (st/seek)
           event (st/event-at index)
           delta (:delta event)
@@ -111,20 +116,24 @@
            (= (:type event) "scroll") (post-player! event)
            :else (handle-event! event))
          (st/inc-seek!)
-         (play-next!))
+         (if (>= (st/seek) (st/event-count))
+           (stop!)
+           (play-next!)))
        (- delta pdelta)))))
 
 (defn play! []
   (st/player-state! "playing")
-  (seek-cycle!)
   (play-next!))
 
 (defn play-events! [index]
   (st/seek! (or index 0))
-  (seek-cycle!)
+  (st/seek-head! (st/max-seek-head))
   (post-player! {:type "unload"})
   (st/player-state! "playing")
   (play-next!))
+
+(defn replay! []
+  (play-events! 0))
 
 (defn decode-event [index]
   (let [event (st/event-at index)]
@@ -189,5 +198,7 @@
   (if-not (st/loaded?)
     (do
       (.log js/console "Player loaded, fetching session...")
+      (seek-cycle!)
       (st/load!)
+      (st/player-state! "loading")
       (st/get-session! sid #(handle-session-load %)))))
