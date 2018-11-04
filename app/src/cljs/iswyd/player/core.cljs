@@ -8,13 +8,12 @@
 
 (defn set-html [html]
   (let [doc (.parseFromString parser html "text/html")
-        _ (.log js/console doc)
-        head (.-outerHTML(.-head doc))
-        body (.-outerHTML(.-body doc))]
+        head (.-outerHTML (.-head doc))
+        body (.-outerHTML (.-body doc))]
 
     (-> js/document
         (.-firstElementChild)
-        (aset "innerHTML" (str  head body)))
+        (aset "innerHTML" (str head body)))
     (st/load!)))
 
 (defn apply-diff [diff]
@@ -27,11 +26,12 @@
 (defn handle-change [event]
   (js/setTimeout
    #(do
-     (.time js/console "apply_change")
+     ;;(.time js/console "apply_change")
      (if-not (st/load?)
        (set-html (:html event))
        (apply-diff (:diff event)))
-     (.timeEnd js/console "apply_change"))))
+     ;;(.timeEnd js/console "apply_change")
+     )))
 
 (defn post-parent [event]
   (.postMessage (.-parent js/window) (clj->js event)))
