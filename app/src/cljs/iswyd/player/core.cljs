@@ -4,14 +4,18 @@
             [iswyd.player.state :as st]))
 
 (defonce dd (js/diffDOM.))
+(defonce parser (js/DOMParser.))
 
-(defn write-html [html]
-  (doto js/document
-    ;;(.open)
-    (.write html)
-    ;;(.close)
-    )
-  (st/load!))
+(defn set-html [html]
+  (let [doc (.parseFromString parser html "text/html")
+        _ (.log js/console doc)
+        head (.-outerHTML(.-head doc))
+        body (.-outerHTML(.-body doc))]
+
+    (-> js/document
+        (.-firstElementChild)
+        (aset "innerHTML" (str  head body)))
+    (st/load!)))
 
 (defn apply-diff [diff]
   (let [body (.-body js/document)
@@ -21,10 +25,13 @@
     (.apply dd body (clj->js (:body diff)))))
 
 (defn handle-change [event]
-  (if-not (st/load?)
-    ;; FIXME: Find a way to write html the first time if possible
-    ;;(write-html (:html event))
-    (apply-diff (:diff event))))
+  (js/setTimeout
+   #(do
+     (.time js/console "apply_change")
+     (if-not (st/load?)
+       (set-html (:html event))
+       (apply-diff (:diff event)))
+     (.timeEnd js/console "apply_change"))))
 
 (defn post-parent [event]
   (.postMessage (.-parent js/window) (clj->js event)))
@@ -37,7 +44,7 @@
     (if-not mark
       (js/scrollTo x y))))
 
-(defn play-event! [event]
+(defn handle-event! [event]
   (let [type  (:type event)]
 
     (js/setTimeout
@@ -49,7 +56,7 @@
          (.log js/console (str "Unrecognized event type: " type)))))))
 
 (defn main []
-  (js/addEventListener "message" #(play-event!
+  (js/addEventListener "message" #(handle-event!
                                    (js->clj (aget % "data") :keywordize-keys true))))
-
-(main)
+(.open js/document)
+(js/addEventListener "load" #(main))
