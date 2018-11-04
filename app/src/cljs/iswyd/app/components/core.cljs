@@ -37,19 +37,21 @@
 ;; FIXME: Fix click riple position to be centered
 (defn pointer [props]
   (let [pointer (st/pointer)]
-    [:div (merge-with merge {:style {:position   'absolute
-                                     :transition "top .1s linear, left .1s linear"
-                                     :top        (:y pointer)
-                                     :left       (:x pointer)}} (or props {}))
+    [:div (merge-with merge
+                      {:style {:position   'absolute
+                               :transition "top .1s linear, left .1s linear"
+                               :top        (:y pointer)
+                               :left       (:x pointer)}}
+                      (or props {}))
      [mui/button-base {:id    :pointer-button
                        :style {:background-color "rgba(0, 0, 0, 0.08)"
                                :poistion         'absolute
                                :min-width        24
                                :min-height       24
-                               :margin-top       -12
-                               :margin-left      -12
-                               :padding          0
-                               :border-radius    12}}
-      [mui/pointer-icon {:style {:position 'absolute
-                                 :top      "50%"
-                                 :left     "50%"}}]]]))
+                               :top              -12
+                               :left             -12
+                               :padding          12
+                               :border-radius    12}}]
+     [mui/pointer-icon {:style {:position 'absolute
+                                :top      0
+                                :left     0}}]]))
