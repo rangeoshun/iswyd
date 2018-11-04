@@ -35,7 +35,6 @@
   (html5
    (head)
    [:body {:class "body-container"}
-    mount-target
     (include-js "/js/player.js")]))
 
 (defroutes app-routes

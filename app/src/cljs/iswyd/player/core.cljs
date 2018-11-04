@@ -7,9 +7,10 @@
 
 (defn write-html [html]
   (doto js/document
-    (.open)
+    ;;(.open)
     (.write html)
-    (.close))
+    ;;(.close)
+    )
   (st/load!))
 
 (defn apply-diff [diff]
@@ -21,7 +22,8 @@
 
 (defn handle-change [event]
   (if-not (st/load?)
-    (write-html (:html event))
+    ;; FIXME: Find a way to write html the first time if possible
+    ;;(write-html (:html event))
     (apply-diff (:diff event))))
 
 (defn post-parent [event]
@@ -35,64 +37,19 @@
     (if-not mark
       (js/scrollTo x y))))
 
-(defn play-next! []
-  (if (and (= (st/state) "playing")
-           (< (st/seek) (st/event-count)))
+(defn play-event! [event]
+  (let [type  (:type event)]
 
-    (let [index (st/seek)
-          event (st/event-at index)
-          delta (:delta event)
-          pdelta (if (> index 0)
-                   (:delta (st/event-at (dec index)))
-                   0)
-          type  (:type event)]
-
-      (js/setTimeout
-       (fn []
-         (case type
-           "change" (handle-change event)
-           "move"   (post-parent event)
-           "down"   (post-parent event)
-           "up"     (post-parent event)
-           "resize" (post-parent event)
-           "scroll" (handle-scroll event)
-           (.log js/console (str "Unrecognized event type: " type)))
-         (post-parent {:type  "seek"
-                       :value (st/seek)})
-         (st/inc-seek!)
-         (play-next!))
-       (- delta pdelta)))))
-
-(defn play-events! [events]
-  (st/unload!)
-  (if-not (st/seek)
-    (st/seek! 0))
-
-  (st/events! events)
-  (st/state! "playing")
-  (post-parent {:type  "state"
-                :value "playing"})
-  (play-next!))
-
-(defn handle-state [event]
-  (let [value (:value event)
-        curr  (st/state)]
-
-    (st/state! value)
-    (if (and (= curr "paused")
-             (= value "playing"))
-      (play-next!))))
-
-(defn handle-command [command]
-  (let [type (:type command)]
-
-    (case type
-      "load"  (play-events! (:events command))
-      "state" (handle-state command)
-      (.log js/console (str "Unrecognized command type: " type)))))
+    (js/setTimeout
+     (fn []
+       (case type
+         "change" (handle-change event)
+         "scroll" (handle-scroll event)
+         "unload" (st/unload!)
+         (.log js/console (str "Unrecognized event type: " type)))))))
 
 (defn main []
-  (js/addEventListener "message" #(handle-command
+  (js/addEventListener "message" #(play-event!
                                    (js->clj (aget % "data") :keywordize-keys true))))
 
 (main)

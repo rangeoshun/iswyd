@@ -22,10 +22,6 @@
 (defn post-player! [event]
   (.postMessage (player-window) (clj->js event) "*"))
 
-(defn play-events [index]
-  (post-player! {:type "load"
-                 :events (st/events-from index)}))
-
 (defn player-container []
   (.getElementById js/document "player-container"))
 
@@ -42,19 +38,99 @@
 
     (/ p-width width)))
 
+(defn loading? []
+  (= (st/player-state) "loading"))
+
+(defn playing? []
+  (= (st/player-state) "playing"))
+
+(defn pause! []
+  (st/player-state! "paused"))
+
+(defn resize-player [event]
+  (st/window! {:width  (:width event)
+               :height (:height event)
+               :scale  (player-ratio event)}))
+
+(defn mouse-event [type]
+  (let [event (.createEvent js/document "MouseEvents")]
+    (.initMouseEvent event type true true js/window)
+    event))
+
+(defn pointer-node []
+  (.getElementById js/document "pointer"))
+
+(defn pointer-button []
+  (.getElementById js/document "pointer-button"))
+
+(defn move-pointer [event]
+  (st/pointer! {:x (:x event)
+                :y (:y event)}))
+
+(defn down-pointer [event]
+  (.dispatchEvent (pointer-button) (mouse-event "mousedown"))
+  (move-pointer event))
+
+(defn up-pointer [event]
+  (.dispatchEvent (pointer-button) (mouse-event "mouseup"))
+  (move-pointer event))
+
+(defn handle-event! [event]
+  (let [type (:type event)]
+
+    (case type
+      "resize" (resize-player event)
+      "move"   (move-pointer event)
+      "down"   (down-pointer event)
+      "up"     (up-pointer event)
+      (.log js/console (str "Unrecognized event type: " type) event))))
+
+(defn play-next! []
+  (if (and (playing?)
+           (< (st/seek) (st/event-count)))
+
+    (let [index (st/seek)
+          event (st/event-at index)
+          delta (:delta event)
+          pdelta (if (> index 0)
+                   (:delta (st/event-at (dec index)))
+                   0)
+          type  (:type event)]
+
+      (st/inc-seek!)
+      (js/setTimeout
+       (fn []
+         (cond
+           (= (:type event) "change") (post-player! event)
+           (= (:type event) "scroll") (post-player! event)
+           :else (handle-event! event))
+         (play-next!))
+       (- delta pdelta)))))
+
+(defn play! []
+  (st/player-state! "playing")
+  (play-next!))
+
+(defn play-events! [index]
+  (st/unload!)
+  (st/seek! (or index 0))
+  (post-player! {:type "unload"})
+  (st/player-state! "playing")
+  (play-next!))
+
 (defn decode-event [index]
   (let [event (st/event-at index)]
     (cond
-      (>= index (st/count-events)) (do
-                                     (.log js/console "Finished decoding, start playback...")
-                                     (play-events 0))
+      (>= index (st/event-count)) (do
+                                    (.log js/console "Finished decoding, start playback...")
+                                    (play-events! 0))
       (= "change" (:type event)) (patch-apply event index)
       :else (do
               (st/update-event! event index)
               (decode-event (inc index))))))
 
 (defn decode-events [events]
-  (st/session-events! events)
+  (st/events! events)
   (decode-event 0))
 
 (defonce css "<style>* { scroll-behavior: smooth; margin: 0; padding: 0;}</style>")
@@ -92,72 +168,12 @@
 
 (set! (.-onmessage worker) #(worker-cb %))
 
-(defn resize-player [event]
-  (st/window! {:width  (:width event)
-               :height (:height event)
-               :scale  (player-ratio event)}))
-
-(defn mouse-event [type]
-  (let [event (.createEvent js/document "MouseEvents")]
-    (.initMouseEvent event type true true js/window)
-    event))
-
-(defn pointer-node []
-  (.getElementById js/document "pointer"))
-
-(defn pointer-button []
-  (.getElementById js/document "pointer-button"))
-
-(defn move-pointer [event]
-  (st/pointer! {:x (:x event)
-                :y (:y event)}))
-
-(defn down-pointer [event]
-  (.dispatchEvent (pointer-button) (mouse-event "mousedown"))
-  (move-pointer event))
-
-(defn up-pointer [event]
-  (.dispatchEvent (pointer-button) (mouse-event "mouseup"))
-  (move-pointer event))
-
 (defn handle-seek [event]
   (st/seek! (:value event)))
 
-(defn player-state! [new-state]
-  (st/player-state! new-state)
-  (post-player! {:type  "state"
-                 :value new-state}))
-
-(defn loading? []
-  (= (st/player-state) "loading"))
-
-(defn playing? []
-  (= (st/player-state) "playing"))
-
-(defn pause! []
-  (player-state! "paused"))
-
-(defn play! []
-  (player-state! "playing"))
-
-(defn handle-player-message [event]
-  (let [type (:type event)]
-
-    (case type
-      "resize" (resize-player event)
-      "move"   (move-pointer event)
-      "down"   (down-pointer event)
-      "up"     (up-pointer event)
-      "seek"   (handle-seek event)
-      "state"  (st/player-state! (:value event))
-      (.log js/console (str "Unrecognized event type: " type) event))))
-
 (defn handle-player-load [events]
   (.log js/console "Player loaded, starting to decode...")
-  ;; FIXME: Find out why does an empty object get postetd in events
+    ;; FIXME: Find out why does an empty object get postetd in events
   (let [events  (filter #(contains? % :time) events)]
-
-    (js/addEventListener "message" #(handle-player-message
-                                     (js->clj (aget % "data") :keywordize-keys true)))
     (js/addEventListener "resize" #(resize-player (st/window)))
     (decode-events events)))

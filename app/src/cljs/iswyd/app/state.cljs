@@ -79,7 +79,7 @@
 (defn html []
   (or (get-in @state [:player :html]) (str)))
 
-(defn load? []
+(defn loaded? []
   (get-in @state [:player :load]))
 
 (defn load! []
@@ -100,7 +100,7 @@
 (defn zero-time []
   (or (:time (first-event)) 0))
 
-(defn session-events! [events]
+(defn events! [events]
   (swap! state assoc-in [:session :events] (into [] events)))
 
 (defn update-event! [event index]
@@ -121,12 +121,15 @@
 (defn seek []
   (get-in @state [:player :seek]))
 
+(defn inc-seek! []
+  (swap! state assoc-in [:player :seek] (inc (seek))))
+
 (defn seek-perc []
   (* 100
      (/ (:delta (event-at (seek)))
         (:delta (last-event)))))
 
-(defn count-events []
+(defn event-count []
   (count (session-events)))
 
 (defn pointer []
