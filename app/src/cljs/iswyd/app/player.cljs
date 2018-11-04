@@ -97,13 +97,13 @@
                    0)
           type  (:type event)]
 
-      (st/inc-seek!)
       (js/setTimeout
        (fn []
          (cond
            (= (:type event) "change") (post-player! event)
            (= (:type event) "scroll") (post-player! event)
            :else (handle-event! event))
+         (st/inc-seek!)
          (play-next!))
        (- delta pdelta)))))
 
@@ -112,7 +112,6 @@
   (play-next!))
 
 (defn play-events! [index]
-  (st/unload!)
   (st/seek! (or index 0))
   (post-player! {:type "unload"})
   (st/player-state! "playing")
@@ -171,9 +170,15 @@
 (defn handle-seek [event]
   (st/seek! (:value event)))
 
-(defn handle-player-load [events]
-  (.log js/console "Player loaded, starting to decode...")
-    ;; FIXME: Find out why does an empty object get postetd in events
+(defn handle-session-load [events]
+  (.log js/console "Session loaded, decoding...")
   (let [events  (filter #(contains? % :time) events)]
     (js/addEventListener "resize" #(resize-player (st/window)))
     (decode-events events)))
+
+(defn handle-player-load [sid]
+  (if-not (st/loaded?)
+    (do
+      (.log js/console "Player loaded, fetching session...")
+      (st/load!)
+      (st/get-session! sid #(handle-session-load %)))))
