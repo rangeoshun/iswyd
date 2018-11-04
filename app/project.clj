@@ -139,7 +139,6 @@
              :figwheel     true
              :source-paths ["src/cljs/iswyd/app"
                             "src/cljs/iswyd/api"
-                            "src/cljs/iswyd/lib"
                             "env/dev/cljs/iswyd"]
              :compiler     {:main           "iswyd.dev"
                             :asset-path     "/js/app_out"
