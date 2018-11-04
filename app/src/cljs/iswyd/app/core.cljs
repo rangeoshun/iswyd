@@ -92,7 +92,7 @@
                                :position       'relative
                                :width          "100%"
                                :height         "100%"}
-                 :onLoad      (fn [] (st/get-session! sid #(p/handle-player-load %)))}]
+                 :onLoad      #(p/handle-player-load sid)}]
        [ic/pointer {:key :pointer
                     :id  :pointer}]]]
      [mui/paper {:key :progress-container}
