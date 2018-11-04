@@ -11,15 +11,16 @@
                                    :list     []
                                    :decoded  false
                                    :time     nil}
-                        :player   {:state   nil
-                                   :html    nil
-                                   :seek    nil
-                                   :load    false
-                                   :wrapper {:height 0}
-                                   :window  {:width  0
-                                             :height 0}
-                                   :pointer {:x -30
-                                             :y -30}}}))
+                        :player   {:state     nil
+                                   :html      nil
+                                   :seek      nil
+                                   :seek-perc 0
+                                   :load      false
+                                   :wrapper   {:height 0}
+                                   :window    {:width  0
+                                               :height 0}
+                                   :pointer   {:x -30
+                                               :y -30}}}))
 
 (defn set-page! [page]
   (swap! state assoc :page page))
@@ -124,10 +125,27 @@
 (defn inc-seek! []
   (swap! state assoc-in [:player :seek] (inc (seek))))
 
-(defn seek-perc []
+(defn seek-as-perc [time]
   (* 100
-     (/ (:delta (event-at (seek)))
+     (/ time
         (:delta (last-event)))))
+
+(defn max-seek-perc []
+  (:delta (event-at (seek))))
+
+(defn tick [] 42)
+
+(defn act-seek-perc []
+  (get-in @state [:player :seek-perc]))
+
+(defn inc-seek-perc! []
+  (swap! state assoc-in [:player :seek-perc]
+         (+ (tick) (act-seek-perc))))
+
+(defn seek-perc []
+  (seek-as-perc
+   (min (max-seek-perc)
+        (act-seek-perc))))
 
 (defn event-count []
   (count (session-events)))

@@ -85,6 +85,13 @@
       "up"     (up-pointer event)
       (.log js/console (str "Unrecognized event type: " type) event))))
 
+(defn seek-cycle! []
+  (js/setTimeout
+   #(if (playing?)
+      (do (st/inc-seek-perc!)
+          (seek-cycle)))
+   (st/tick)))
+
 (defn play-next! []
   (if (and (playing?)
            (< (st/seek) (st/event-count)))
@@ -109,10 +116,12 @@
 
 (defn play! []
   (st/player-state! "playing")
+  (seek-cycle!)
   (play-next!))
 
 (defn play-events! [index]
   (st/seek! (or index 0))
+  (seek-cycle!)
   (post-player! {:type "unload"})
   (st/player-state! "playing")
   (play-next!))
