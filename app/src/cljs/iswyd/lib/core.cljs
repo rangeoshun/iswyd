@@ -60,10 +60,10 @@
            :key   key
            :patch patch})))
 (defn log-focus! []
-  (log {:type :focus}))
+  (log! {:type :focus}))
 
 (defn log-blur! []
-  (log {:type :blur}))
+  (log! {:type :blur}))
 
 (defn log-scroll! [ev]
   (log! ev)
@@ -348,12 +348,12 @@
   (js/addEventListener "blur" #(compress-post!)))
 
 (defn handle-location []
-  (let [que (or (.get js/SessionStorage "iswyd_session_que") [])]
-    (.set SessionStorage "iswyd_session_que"
-          (conj que {:session_id sid
-                     :location   (str js/location)}))))
+  (let [que (or (.getItem js/sessionStorage "iswyd_session_que") [])]
+    (.setItem js/sessionStorage "iswyd_session_que"
+              (.concat que #js {:session_id (str @sid)
+                                :location   (str js/location)}))))
 
-(defn listen-popshange! []
+(defn listen-popchange! []
   (js/addEventListener "popchange" (handle-location)))
 
 (defn listen-blur-focus! []
@@ -363,10 +363,15 @@
 (defn init-changelog! [opts]
   (if-not @ready
     (do
+      (when-let [meta (:meta opts)]
+        (log! {:type :meta
+               :data meta}))
       (reset! excludes (cstr/join "," (:exclude opts)))
       (reset! ready true)
       (reset! sid (random-uuid))
       (mark-nodes! (excluded-nodes (doc-root)))
+      (init-posting!)
+      (set! (.-onmessage worker) #(worker-cb %))
       (let [root (doc-root)]
         (change-handler!)
         (listen-move!)
@@ -377,15 +382,12 @@
         (listen-popchange!)
         (listen-change! (inputs root))
         (. obs observe root obs-conf))
-      (init-posting!)
-      (set! (.-onmessage worker) #(worker-cb %))
       true)
     false))
 
-(def iswyd-ext #js {:init (fn [opts]
-                            (init-changelog!
-                             (merge {:exclude ["iframe"]}
-                                    (js->clj opts :keywordize-keys true))))})
+(def iswyd-ext #js {:init #(init-changelog!
+                            (merge {:exclude ["iframe"]}
+                                   (js->clj % :keywordize-keys true)))})
 
 (defn main []
   (.log js/console "iSwyd registered, waiting for init...")
