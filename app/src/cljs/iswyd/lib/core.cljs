@@ -52,14 +52,18 @@
 ;;   (.getAttribute (.querySelector js/document "meta[csrf-token]") "csrf-token"))
 
 (defn log! [ev]
-  (swap! changelog (fn [] (conj @changelog ev))))
+  (swap! changelog (fn [] (conj @changelog (merge ev {:time (now)})))))
 
 (defn log-change! [patch key]
   (if-not (empty? patch)
     (log! {:type  :change
            :key   key
-           :patch patch
-           :time  (now)})))
+           :patch patch})))
+(defn log-focus! []
+  (log {:type :focus}))
+
+(defn log-blur! []
+  (log {:type :blur}))
 
 (defn log-scroll! [ev]
   (log! ev)
@@ -233,8 +237,7 @@
                            :buttons (.-buttons ev)
                            :keys    (keys-num ev)
                            :x       (.-pageX ev)
-                           :y       (.-pageY ev)
-                           :time    (now)})
+                           :y       (.-pageY ev)})
 
 (defn log-mouse! [ev]
   (log! ev)
@@ -281,8 +284,7 @@
      :mark (mark! node)
      :keys (keys-num ev)
      :x    (.-scrollX js/window)
-     :y    (.-scrollY js/window)
-     :time (now)}))
+     :y    (.-scrollY js/window)}))
 
 (defn scroll-change [prev curr]
   (or
@@ -309,8 +311,7 @@
 
 (defn resize-ev [] {:type   :resize
                     :width  (aget js/window "innerWidth")
-                    :height (aget js/window "innerHeight")
-                    :time   (now)})
+                    :height (aget js/window "innerHeight")})
 
 (defn resize-change [prev curr]
   (or
@@ -346,6 +347,19 @@
   (js/setInterval #(compress-post!) 1000)
   (js/addEventListener "blur" #(compress-post!)))
 
+(defn handle-location []
+  (let [que (or (.get js/SessionStorage "iswyd_session_que") [])]
+    (.set SessionStorage "iswyd_session_que"
+          (conj que {:session_id sid
+                     :location   (str js/location)}))))
+
+(defn listen-popshange! []
+  (js/addEventListener "popchange" (handle-location)))
+
+(defn listen-blur-focus! []
+  (js/addEventListener "blur" (log-blur!))
+  (js/addEventListener "focus" (log-focus!)))
+
 (defn init-changelog! [opts]
   (if-not @ready
     (do
@@ -360,6 +374,7 @@
         (listen-up!)
         (listen-scroll!)
         (listen-resize!)
+        (listen-popchange!)
         (listen-change! (inputs root))
         (. obs observe root obs-conf))
       (init-posting!)
@@ -369,7 +384,7 @@
 
 (def iswyd-ext #js {:init (fn [opts]
                             (init-changelog!
-                             (merge {:exclude []}
+                             (merge {:exclude ["iframe"]}
                                     (js->clj opts :keywordize-keys true))))})
 
 (defn main []
