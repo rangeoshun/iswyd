@@ -1,1 +1,0 @@
-{:change-topic "change", :ua-topic "user-agent", :mongo-host "mongo", :mongo-session "sessions", :mongo-db "iswyd", :decode-topic "decode", :api-change-path "/api/changes", :kafka-host "kafka:9092", :app-host "http://0.0.0.0", :dev true}
