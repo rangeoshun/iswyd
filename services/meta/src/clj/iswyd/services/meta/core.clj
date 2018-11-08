@@ -1,4 +1,4 @@
-(ns iswyd.services.change.core
+(ns iswyd.services.meta.core
   (:require [clojure.data.json :as json]
             [clojure.core.async :as a :refer [go <! >!]]
             [clojure.tools.logging :as log]
@@ -11,19 +11,27 @@
 
 ;; TODO: Find out what is the idiomatic way to handle errors
 
-(log/info "changes service starting up with config:")
+(log/info "meta service starting up with config:")
 (log/info (:env env))
 
 (defonce ch (async/producer {:bootstrap.servers (:kafka-host env)}
                             :keyword :edn))
 
-(defn pub-change [sid cid evs]
+(defn pub-meta [sid meta]
   (go
-    (>! ch {:topic (:change-topic env)
+    (>! ch {:topic (:meta-topic env)
             :key   sid
             :value {:session_id sid
-                    :change_id  cid
-                    :events     evs}}))
+                    :meta       meta}}))
+  {:status 200
+   :body   (json/write-str {:success true})})
+
+(defn pub-ua [sid ua]
+  (go
+    (>! ch {:topic (:ua-topic env)
+            :key   sid
+            :value {:session_id sid
+                    :user_agent ua}}))
   {:status 200
    :body   (json/write-str {:success true})})
 
@@ -31,20 +39,26 @@
   {:status 500
    :body   (json/write-str {:success false})})
 
-(defn handle-change-ok [sid cid evs]
-  (if-not (empty? evs)
-    (pub-change sid cid evs)
+(defn handle-meta-ok [sid meta]
+  (if-not (empty? meta)
+    (pub-meta sid meta)
     (handle-srv-fail)))
+
+(defn handle-ua-ok [sid ua]
+  (if-not (nil? ua)
+    (pub-ua sid ua)))
 
 ;; TODO: Save timestamp of receiveing
 (defn change-handler [request]
   (let [body (json/read-str (slurp (:body request)) :key-fn keyword)
         sid  (:session_id body)
-        cid  (:change_id body)
-        evs  (:events body)]
+        meta (:meta body)
+        ua   (get-in request [:headers "user-agent"])]
 
-    (if (and sid cid evs)
-      (handle-change-ok sid cid evs)
+    (if (and sid meta)
+      (do
+        (handle-ua-ok sid ua)
+        (handle-meta-ok sid meta))
       {:status 400
        :body   (json/write-str {:success false})})))
 

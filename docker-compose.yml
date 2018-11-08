@@ -102,6 +102,21 @@ services:
     depends_on:
       - mongo
 
+  meta_srv:
+    image: clojure:lein-2.8.1
+    restart: always
+    hostname: meta_srv
+    ports:
+      - 3455:3455
+    volumes:
+      - .:/app
+      - /app/target
+      - ~/.m2:/root/.m2
+    working_dir: "/app"
+    entrypoint: lein monolith each :select :meta do ring server-headless
+    networks:
+      - dev_net
+
   kafka:
     image: spotify/kafka
     restart: always

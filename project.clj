@@ -52,7 +52,8 @@
                                  :decode     #(= (:service %) :decode)
                                  :persist    #(= (:service %) :persist)
                                  :sessions   #(= (:service %) :sessions)
-                                 :useragent  #(= (:service %) :useragent)}
+                                 :useragent  #(= (:service %) :useragent)
+                                 :meta       #(= (:service %) :meta)}
 
              :project-dirs ["services/*"
                             "app"
@@ -67,4 +68,5 @@
                          :kafka-host      "kafka:9092"
                          :change-topic    "change"
                          :decode-topic    "decode"
-                         :ua-topic        "user-agent"}}})
+                         :ua-topic        "user-agent"
+                         :meta-topic      "meta"}}})

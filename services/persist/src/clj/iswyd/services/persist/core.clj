@@ -28,19 +28,28 @@
 
 (defn exists? [sid] (mc/any? db coll {:session_id sid}))
 
-(defn in-doc [sid cid evs]
+(defn in-doc-change [sid cid evs]
   (mc/insert db coll {:_id        (mu/random-uuid)
                       :changes    [cid]
                       :session_id sid
                       :events     evs}))
 
-(defn up-doc [sid cid evs]
+(defn up-doc-change [sid cid evs]
   (mc/update db coll {:session_id sid :changes {$ne cid}}
              {$push {:changes cid
                      :events  {$each evs}}}))
 
+(defn in-doc-meta [sid meta]
+  (mc/insert db coll {:_id        (mu/random-uuid)
+                      :meta       meta
+                      :session_id sid}))
+
+(defn up-doc-meta [sid meta]
+  (mc/update db coll {:session_id sid :meta {$exists false}}
+             {:meta meta}))
+
 ;; TODO: Save cids in hash with cid as key and timestamp as value
-(defn handle [msg]
+(defn handle-change [msg]
   (let [val  (:value msg)
         sid  (:session_id val)
         cid  (:change_id val)
@@ -48,15 +57,28 @@
 
     (if (and sid cid (not (empty? data)))
       (if (exists? sid)
-        (up-doc sid cid data)
-        (in-doc sid cid data)))))
+        (up-doc-change sid cid data)
+        (in-doc-change sid cid data)))))
+
+(defn handle-meta [msg]
+  (let [val  (:value msg)
+        sid  (:session_id val)
+        meta (:meta val)]
+
+    (if (and sid (not (empty? meta)))
+      (if (exists? sid)
+        (up-doc-meta sid meta)
+        (in-doc-meta sid meta)))))
 
 (a/go-loop []
   (when-let [msg (<! e-ch)]
-    (handle msg)
+    (if (get-in msg [:value :meta])
+      (handle-meta msg)
+      (handle-change msg))
     (recur)))
 
 (a/put! c-ch {:op :subscribe :topic (:decode-topic env)})
+(a/put! c-ch {:op :subscribe :topic (:meta-topic env)})
 (a/put! c-ch {:op :commit})
 
 (defroutes srv-routes

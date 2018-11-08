@@ -354,21 +354,24 @@
                                 :location   (str js/location)}))))
 
 (defn listen-popchange! []
-  (js/addEventListener "popchange" (handle-location)))
+  (js/addEventListener "popchange" #(handle-location)))
 
 (defn listen-blur-focus! []
-  (js/addEventListener "blur" (log-blur!))
-  (js/addEventListener "focus" (log-focus!)))
+  (js/addEventListener "blur" #(log-blur!))
+  (js/addEventListener "focus" #(log-focus!)))
+
+(defn handle-meta [meta]
+  (api/post-meta (str @sid) {:screen {:width  (.-width  js/screen)
+                                      :height (.-height js/screen)}
+                             :custom meta}))
 
 (defn init-changelog! [opts]
   (if-not @ready
     (do
-      (when-let [meta (:meta opts)]
-        (log! {:type :meta
-               :data meta}))
+      (reset! sid (random-uuid))
+      (handle-meta (:meta opts))
       (reset! excludes (cstr/join "," (:exclude opts)))
       (reset! ready true)
-      (reset! sid (random-uuid))
       (mark-nodes! (excluded-nodes (doc-root)))
       (init-posting!)
       (set! (.-onmessage worker) #(worker-cb %))
