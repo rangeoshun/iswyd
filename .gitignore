@@ -17,3 +17,4 @@ pom.xml.asc
 /node_modules
 **/target
 /data
+**/.lein-env
