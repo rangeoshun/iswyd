@@ -155,11 +155,13 @@ services:
   #   ports:
   #     - 8080:8080
 
-  # kafka_vis:
-  #   image: kbhargava/kafka-visuals
-  #   ports:
-  #     - 8080:8080
-  #   entrypoint: /opt/kafkavisualizer/file.sh zookeeper:2181 kafka:9092 DEV
+  kafka_vis:
+    image: kbhargava/kafka-visuals
+    ports:
+      - 8080:8080
+    entrypoint: /opt/kafkavisualizer/file.sh kafka:2181 kafka:9092 DEV
+    networks:
+      - dev_net
 
 networks:
   dev_net:
