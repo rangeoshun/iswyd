@@ -17,21 +17,19 @@ services:
     networks:
       - dev_net
 
-  change_srv:
+  events_srv:
     image: clojure:lein-2.8.1
     restart: always
-    hostname: change_srv
+    hostname: events_srv
     ports:
       - 3450:3450
     volumes:
       - .:/app
       - ~/.m2:/root/.m2
     working_dir: "/app"
-    entrypoint: lein monolith each :select :change do ring server-headless
+    entrypoint: lein monolith each :select :events do ring server-headless
     networks:
       - dev_net
-    depends_on:
-      - kafka
 
   decode_srv:
     image: clojure:lein-2.8.1
@@ -47,8 +45,6 @@ services:
     entrypoint: lein monolith each :select :decode do ring server-headless
     networks:
       - dev_net
-    depends_on:
-      - kafka
 
   persist_srv:
     image: clojure:lein-2.8.1
@@ -64,9 +60,6 @@ services:
     entrypoint: lein monolith each :select :persist do ring server-headless
     networks:
       - dev_net
-    depends_on:
-      - kafka
-      - mongo
 
   sessions_srv:
     image: clojure:lein-2.8.1
@@ -82,8 +75,6 @@ services:
     entrypoint: lein monolith each :select :sessions do ring server-headless
     networks:
       - dev_net
-    depends_on:
-      - mongo
 
   useragent_srv:
     image: clojure:lein-2.8.1
@@ -99,8 +90,6 @@ services:
     entrypoint: lein monolith each :select :useragent do ring server-headless
     networks:
       - dev_net
-    depends_on:
-      - mongo
 
   meta_srv:
     image: clojure:lein-2.8.1
@@ -165,6 +154,12 @@ services:
   #     - /var/lib/docker/:/var/lib/docker:ro
   #   ports:
   #     - 8080:8080
+
+  # kafka_vis:
+  #   image: kbhargava/kafka-visuals
+  #   ports:
+  #     - 8080:8080
+  #   entrypoint: /opt/kafkavisualizer/file.sh zookeeper:2181 kafka:9092 DEV
 
 networks:
   dev_net:

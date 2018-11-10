@@ -1,4 +1,4 @@
-(ns iswyd.services.change.core
+(ns iswyd.services.events.core
   (:require [clojure.data.json :as json]
             [clojure.core.async :as a :refer [go <! >!]]
             [clojure.tools.logging :as log]
@@ -11,19 +11,19 @@
 
 ;; TODO: Find out what is the idiomatic way to handle errors
 
-(log/info "changes service starting up with config:")
+(log/info "Eventss service starting up with config:")
 (log/info (:env env))
 
 (defonce ch (async/producer {:bootstrap.servers (:kafka-host env)}
-                            :keyword :edn))
+                             :keyword :edn))
 
-(defn pub-change [sid cid evs]
+(defn pub-events [sid eid evs]
   (go
-    (>! ch {:topic (:change-topic env)
+    (>! ch {:topic (:events-topic env)
             :key   sid
-            :value {:session_id sid
-                    :change_id  cid
-                    :events     evs}}))
+            :value {:session_id     sid
+                    :event_group_id eid
+                    :events         evs}}))
   {:status 200
    :body   (json/write-str {:success true})})
 
@@ -31,22 +31,22 @@
   {:status 500
    :body   (json/write-str {:success false})})
 
-(defn handle-change-ok [sid cid evs]
+(defn handle-events-ok [sid eid evs]
   (if-not (empty? evs)
-    (pub-change sid cid evs)
+    (pub-events sid eid evs)
     (handle-srv-fail)))
 
 ;; TODO: Save timestamp of receiveing
 (defn change-handler [request]
-  (let [body (json/read-str (slurp (:body request)) :key-fn keyword)
-        sid  (:session_id body)
-        cid  (:change_id body)
-        evs  (:events body)]
+  (if-let [body (json/read-str (slurp (:body request)) :key-fn keyword)]
+    (let [sid  (:session_id body)
+          eid  (:event_group_id body)
+          evs  (:events body)]
 
-    (if (and sid cid evs)
-      (handle-change-ok sid cid evs)
-      {:status 400
-       :body   (json/write-str {:success false})})))
+      (handle-events-ok sid eid evs))
+
+    {:status 400
+     :body   (json/write-str {:success false})}))
 
 (defn wrap-cors [handler]
   (fn [request]

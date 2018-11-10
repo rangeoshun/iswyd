@@ -34,9 +34,9 @@
   (api-req "/api/meta" {:method :POST} {:session_id sid
                                         :meta       meta}))
 
-(defn post-change [sid events]
-  (api-req "/api/change" {:method :POST} {:session_id sid
-                                          :change_id  (str (random-uuid))
+(defn post-events [sid events]
+  (api-req "/api/events" {:method :POST} {:session_id sid
+                                          :event_group_id  (str (random-uuid))
                                           :events     events}))
 
 (defn get-sessions []

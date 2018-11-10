@@ -24,26 +24,34 @@
 (defonce c-ch (second c-vec))
 
 (defn decode [data]
-  (json/read-str (. LZString decompressFromBase64 data)
-                 :value-fn (fn [_ val] val)
-                 :key-fn keyword))
+  (let [json-str (. LZString decompressFromBase64 data)]
+    (try
+      (json/read-str json-str
+                     :value-fn (fn [_ val] val)
+                     :key-fn keyword)
+      (catch Exception e
+        (str "Could not parse JSON string exception: " (.getMessage e))))))
 
-(defn pub-decode [sid cid evs]
+(defn pub-decode [sid eid evs]
   (go
-    (>! p-ch {:topic (:decode-topic env)
+    (>! p-ch {:topic (:persist-topic env)
               :key   sid
-              :value {:type       :decode
-                      :session_id sid
-                      :change_id  cid
-                      :events     (decode evs)}})))
+              :value {:type           :events
+                      :session_id     sid
+                      :event_group_id eid
+                      :events         (decode evs)}})))
 
 (a/go-loop []
   (when-let [msg (<! e-ch)]
-    (if (:value msg)
-      (pub-decode (:session_id (:value msg)) (:change_id (:value msg)) (:events (:value msg))))
+    (let [val (:value msg)
+          sid (:session_id val)
+          eid (:event_group_id val)
+          evs (:events val)]
+
+      (pub-decode sid eid evs))
     (recur)))
 
-(a/put! c-ch {:op :subscribe :topic (:change-topic env)})
+(a/put! c-ch {:op :subscribe :topic (:events-topic env)})
 (a/put! c-ch {:op :commit})
 
 (defroutes srv-routes

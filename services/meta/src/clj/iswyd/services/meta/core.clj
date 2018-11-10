@@ -11,7 +11,7 @@
 
 ;; TODO: Find out what is the idiomatic way to handle errors
 
-(log/info "meta service starting up with config:")
+(log/info "Meta service starting up with config:")
 (log/info (:env env))
 
 (defonce ch (async/producer {:bootstrap.servers (:kafka-host env)}
@@ -19,9 +19,10 @@
 
 (defn pub-meta [sid meta]
   (go
-    (>! ch {:topic (:meta-topic env)
+    (>! ch {:topic (:persist-topic env)
             :key   sid
-            :value {:session_id sid
+            :value {:type       :meta
+                    :session_id sid
                     :meta       meta}}))
   {:status 200
    :body   (json/write-str {:success true})})
@@ -50,17 +51,16 @@
 
 ;; TODO: Save timestamp of receiveing
 (defn change-handler [request]
-  (let [body (json/read-str (slurp (:body request)) :key-fn keyword)
-        sid  (:session_id body)
-        meta (:meta body)
-        ua   (get-in request [:headers "user-agent"])]
+  (if-let [body (json/read-str (slurp (:body request)) :key-fn keyword)]
 
-    (if (and sid meta)
-      (do
-        (handle-ua-ok sid ua)
-        (handle-meta-ok sid meta))
-      {:status 400
-       :body   (json/write-str {:success false})})))
+    (let [sid  (:session_id body)
+          meta (:meta body)]
+
+      (handle-ua-ok sid (get-in request [:headers "user-agent"]))
+      (handle-meta-ok sid meta))
+
+    {:status 400
+     :body   (json/write-str {:success false})}))
 
 (defn wrap-cors [handler]
   (fn [request]

@@ -341,7 +341,7 @@
         task (first data)]
     (if (= task "patch-make")
       (log-change! (second data) (third data))
-      (api/post-change (str @sid) (second data)))))
+      (api/post-events (str @sid) (second data)))))
 
 (defn init-posting! []
   (js/setInterval #(compress-post!) 1000)

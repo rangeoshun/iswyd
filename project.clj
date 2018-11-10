@@ -48,7 +48,7 @@
              :project-selectors {:deployable :deployable
                                  :unstable   #(= (first (:version %)) \0)
                                  :app        :app
-                                 :change     #(= (:service %) :change)
+                                 :events     #(= (:service %) :events)
                                  :decode     #(= (:service %) :decode)
                                  :persist    #(= (:service %) :persist)
                                  :sessions   #(= (:service %) :sessions)
@@ -66,7 +66,7 @@
                          :mongo-db        "iswyd"
                          :mongo-session   "sessions"
                          :kafka-host      "kafka:9092"
-                         :change-topic    "change"
-                         :decode-topic    "decode"
+                         :events-topic    "events"
+                         :persist-topic   "persist"
                          :ua-topic        "user-agent"
                          :meta-topic      "meta"}}})

@@ -28,16 +28,16 @@
 
 (defn exists? [sid] (mc/any? db coll {:session_id sid}))
 
-(defn in-doc-change [sid cid evs]
-  (mc/insert db coll {:_id        (mu/random-uuid)
-                      :changes    [cid]
-                      :session_id sid
-                      :events     evs}))
+(defn in-doc-events [sid eid evs]
+  (mc/insert db coll {:_id          (mu/random-uuid)
+                      :event_groups [eid]
+                      :session_id   sid
+                      :events       evs}))
 
-(defn up-doc-change [sid cid evs]
-  (mc/update db coll {:session_id sid :changes {$ne cid}}
-             {$push {:changes cid
-                     :events  {$each evs}}}))
+(defn up-doc-events [sid eid evs]
+  (mc/update db coll {:session_id sid :changes {$ne eid}}
+             {$push {:event_groups eid
+                     :events       {$each evs}}}))
 
 (defn in-doc-meta [sid meta]
   (mc/insert db coll {:_id        (mu/random-uuid)
@@ -48,17 +48,26 @@
   (mc/update db coll {:session_id sid :meta {$exists false}}
              {:meta meta}))
 
-;; TODO: Save cids in hash with cid as key and timestamp as value
-(defn handle-change [msg]
-  (let [val  (:value msg)
-        sid  (:session_id val)
-        cid  (:change_id val)
-        data (:events val)]
+(defn in-doc-ua [sid uao]
+  (mc/insert db coll {:session_id sid
+                      :user_agent uao}))
 
-    (if (and sid cid (not (empty? data)))
+(defn up-doc-ua [sid uao]
+  (mc/update db coll {:session_id sid
+                      :user_agent {$exists false}}
+             {$set {:user_agent uao}}))
+
+;; TODO: Save cids in hash with cid as key and timestamp as value
+(defn handle-events [msg]
+  (let [val (:value msg)
+        sid (:session_id val)
+        eid (:event_group_id val)
+        evs (:events val)]
+
+    (if (and sid eid (not (empty? evs)))
       (if (exists? sid)
-        (up-doc-change sid cid data)
-        (in-doc-change sid cid data)))))
+        (up-doc-events sid eid evs)
+        (in-doc-events sid eid evs)))))
 
 (defn handle-meta [msg]
   (let [val  (:value msg)
@@ -70,15 +79,25 @@
         (up-doc-meta sid meta)
         (in-doc-meta sid meta)))))
 
+(defn handle-ua [msg]
+  (let [val (:value msg)
+        sid (:session_id val)
+        uao (:user_agent val)]
+
+    (if (exists?)
+      (up-doc-ua sid uao)
+      (in-doc-ua sid uao))))
+
 (a/go-loop []
   (when-let [msg (<! e-ch)]
-    (if (get-in msg [:value :meta])
-      (handle-meta msg)
-      (handle-change msg))
+    (log/info "Persisting message:" (get-in msg [:value :meta]))
+    (case (get-in msg [:value :type])
+      :meta       (handle-meta msg)
+      :user_agent (handle-ua msg)
+      :events     (handle-events msg))
     (recur)))
 
-(a/put! c-ch {:op :subscribe :topic (:decode-topic env)})
-(a/put! c-ch {:op :subscribe :topic (:meta-topic env)})
+(a/put! c-ch {:op :subscribe :topic (:persist-topic env)})
 (a/put! c-ch {:op :commit})
 
 (defroutes srv-routes

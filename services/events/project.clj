@@ -1,8 +1,8 @@
-(defproject iswyd.services.change "0.1.0-SNAPHOST"
-  :description "A web service to collect changes and propagate them to Kafka"
+(defproject iswyd.services.events "0.1.0-SNAPHOST"
+  :description "A web service to collect events and propagate them to Kafka"
   :monolith/inherit true
   :deployable true
-  :service :change
+  :service :events
 
   :dependencies [[compojure "1.6.1"]
                  [lein-monolith "1.1.0"]
@@ -24,7 +24,7 @@
   :source-paths ["src/clj"]
 
   :ring {:port          3450
-         :handler       iswyd.services.change.core/main
+         :handler       iswyd.services.events.core/main
          :open-browser? false}
 
   :profiles {:dev {:dependencies [[ring/ring-mock "0.3.2"]

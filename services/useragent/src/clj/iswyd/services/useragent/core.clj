@@ -14,9 +14,8 @@
             [user-agent :as ua])
   (:import (com.mongodb MongoOptions ServerAddress)))
 
-(defonce conn (mg/connect {:host (:mongo-host env)}))
-(defonce db (mg/get-db conn (:mongo-db env)))
-(defonce coll (:mongo-session env))
+(defonce p-ch (async/producer {:bootstrap.servers (:kafka-host env)}
+                              :keyword :edn))
 
 (defonce c-vec (async/consumer {:bootstrap.servers (:kafka-host env)
                                 :group.id          (mu/random-uuid)}
@@ -26,22 +25,22 @@
 (defonce e-ch (first c-vec))
 (defonce c-ch (second c-vec))
 
-(defn up-doc [sid uao]
-  (mc/update db coll {:session_id sid
-                      :user_agent {$exists false}}
-             {$set {:user_agent uao}}))
-
-(defn handle [msg]
-  (let [val (:value msg)
-        sid (:session_id val)
-        uas (:user_agent val)]
-
-    (if uas
-      (up-doc sid (ua/parse uas)))))
+(defn pub-ua [sid uas]
+  (go
+    (>! p-ch {:topic (:persist-topic env)
+              :key   sid
+              :value {:type       :user_agent
+                      :session_id sid
+                      :user_agent (ua/parse uas)}})))
 
 (a/go-loop []
   (when-let [msg (<! e-ch)]
-    (handle msg)
+    (let [val (:value msg)
+          sid (:session_id val)
+          uas (:user_agent val)]
+      (if (and (string? sid)
+               (string? uas))
+        (pub-ua sid uas)))
     (recur)))
 
 (a/put! c-ch {:op :subscribe :topic (:ua-topic env)})
