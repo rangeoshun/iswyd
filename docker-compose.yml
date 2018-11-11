@@ -130,7 +130,7 @@ services:
       - 27017:27017
     volumes:
       - ./data/db:/data
-    command: mongod --dbpath /data
+    command: mongod --dbpath /data --smallfiles --journal
     networks:
       - dev_net
 
@@ -143,6 +143,11 @@ services:
       - 80:80
     networks:
       - dev_net
+    links:
+      - app
+      - sessions_srv
+      - events_srv
+      - meta_srv
 
   # cadvisor:
   #   image: google/cadvisor
@@ -162,6 +167,8 @@ services:
     entrypoint: /opt/kafkavisualizer/file.sh kafka:2181 kafka:9092 DEV
     networks:
       - dev_net
+    links:
+      - kafka
 
 networks:
   dev_net:

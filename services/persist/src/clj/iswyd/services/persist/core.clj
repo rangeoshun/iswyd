@@ -26,7 +26,7 @@
 (defonce e-ch (first c-vec))
 (defonce c-ch (second c-vec))
 
-(defn exists? [sid] (mc/any? db coll {:session_id sid}))
+(defn rec-exists? [sid] (mc/any? db coll {:session_id sid}))
 
 (defn in-doc-events [sid eid evs]
   (mc/insert db coll {:_id          (mu/random-uuid)
@@ -65,7 +65,7 @@
         evs (:events val)]
 
     (if (and sid eid (not (empty? evs)))
-      (if (exists? sid)
+      (if (rec-exists? sid)
         (up-doc-events sid eid evs)
         (in-doc-events sid eid evs)))))
 
@@ -75,7 +75,7 @@
         meta (:meta val)]
 
     (if (and sid (not (empty? meta)))
-      (if (exists? sid)
+      (if (rec-exists? sid)
         (up-doc-meta sid meta)
         (in-doc-meta sid meta)))))
 
@@ -84,21 +84,26 @@
         sid (:session_id val)
         uao (:user_agent val)]
 
-    (if (exists?)
+    (if (rec-exists? sid)
       (up-doc-ua sid uao)
       (in-doc-ua sid uao))))
 
-(a/go-loop []
-  (when-let [msg (<! e-ch)]
-    (log/info "Persisting message:" (get-in msg [:value :meta]))
-    (case (get-in msg [:value :type])
-      :meta       (handle-meta msg)
-      :user_agent (handle-ua msg)
-      :events     (handle-events msg))
-    (recur)))
+(defn handle [msg]
+  (case (get-in msg [:value :type])
+    :meta       (handle-meta msg)
+    :user_agent (handle-ua msg)
+    :events     (handle-events msg)
+    nil))
 
-(a/put! c-ch {:op :subscribe :topic (:persist-topic env)})
-(a/put! c-ch {:op :commit})
+(defonce consumer
+  (do
+    (a/go-loop []
+      (when-let [msg (<! e-ch)]
+        (handle msg)
+        (recur)))
+    (a/put! c-ch {:op :subscribe :topic (:persist-topic env)})
+    (a/put! c-ch {:op :commit})
+    c-ch))
 
 (defroutes srv-routes
   (GET "/" request (json/write-str {:status 200}))

@@ -38,15 +38,15 @@
 
 ;; TODO: Save timestamp of receiveing
 (defn change-handler [request]
-  (if-let [body (json/read-str (slurp (:body request)) :key-fn keyword)]
-    (let [sid  (:session_id body)
-          eid  (:event_group_id body)
-          evs  (:events body)]
+  (let [body (json/read-str (slurp (:body request)) :key-fn keyword)
+        sid  (:session_id body)
+        eid  (:event_group_id body)
+        evs  (:events body)]
 
-      (handle-events-ok sid eid evs))
-
-    {:status 400
-     :body   (json/write-str {:success false})}))
+    (if (and sid eid evs)
+      (handle-events-ok sid eid evs)
+      {:status 400
+       :body   (json/write-str {:success false})})))
 
 (defn wrap-cors [handler]
   (fn [request]

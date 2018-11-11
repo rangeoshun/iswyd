@@ -18,14 +18,14 @@
 (defn multi-handler [request]
   {:status 200
    :body   (json/write-str {:success true
-                            :data    (mc/find-maps db coll {} {:_id        0
-                                                               :events     0
-                                                               :changes    0})})})
+                            :data    (mc/find-maps db coll {} {:_id          0
+                                                               :events       0
+                                                               :event-groups 0})})})
 
 (defn solo-handler [request]
   (let [session (mc/find-one-as-map
-                 db coll {:session_id (:session_id (:params request))} {:_id     0
-                                                                        :changes 0})]
+                 db coll {:session_id (:session_id (:params request))} {:_id          0
+                                                                        :event-groups 0})]
 
     (if session
       {:status 200

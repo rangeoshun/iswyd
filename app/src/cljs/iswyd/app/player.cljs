@@ -190,7 +190,10 @@
 
 (defn handle-session-load [events]
   (.log js/console "Session loaded, decoding...")
-  (let [events  (filter #(contains? % :time) events)]
+  ;; FIXME: Find why defected events make it into the changelog
+  (let [events  (filter (fn [event]
+                          (and (contains? event :time)
+                               (contains? event :type))) events)]
     (js/addEventListener "resize" #(resize-player (st/window)))
     (decode-events events)))
 
