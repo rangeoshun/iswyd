@@ -2,6 +2,10 @@
 
 This is the iSwyd project. Short for "I Saw What You Did". Pronounciation: aɪzwʌɪd (as in "eyes wide").
 
+## Github Recording Demo on YouTube
+
+[![ISWYD Github Record Demo](http://img.youtube.com/vi/EHuBAAKuRio/0.jpg)](http://www.youtube.com/watch?v=EHuBAAKuRio "ISWYD Github Recording Demo")
+
 ## Development mode
 
 I suggest to use the docker-compose environment, as that is created for you to be able to run servvices separately, although you could reconfigure it to use different kafka or mongo instance, but why would you? So just run:
